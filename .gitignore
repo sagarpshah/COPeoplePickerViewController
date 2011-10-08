@@ -16,7 +16,3 @@ profile
 
 # osx noise
 .DS_Store
-
-# generated geonames sqlite dbs
-Scripts/tmp
-Scripts/db
