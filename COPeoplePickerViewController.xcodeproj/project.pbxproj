@@ -1,0 +1,270 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DC3CFB461440C73200B11E92 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3CFB451440C73200B11E92 /* UIKit.framework */; };
+		DC3CFB481440C73200B11E92 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3CFB471440C73200B11E92 /* Foundation.framework */; };
+		DC3CFB4A1440C73200B11E92 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3CFB491440C73200B11E92 /* CoreGraphics.framework */; };
+		DC3CFB501440C73200B11E92 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC3CFB4E1440C73200B11E92 /* InfoPlist.strings */; };
+		DC3CFB521440C73200B11E92 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3CFB511440C73200B11E92 /* main.m */; };
+		DC3CFB561440C73200B11E92 /* COAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3CFB551440C73200B11E92 /* COAppDelegate.m */; };
+		DC3CFB5E1440C78100B11E92 /* COPeoplePickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3CFB5D1440C78100B11E92 /* COPeoplePickerViewController.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		DC3CFB411440C73200B11E92 /* COPeoplePickerViewController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = COPeoplePickerViewController.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC3CFB451440C73200B11E92 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		DC3CFB471440C73200B11E92 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		DC3CFB491440C73200B11E92 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		DC3CFB4D1440C73200B11E92 /* COPeoplePickerViewController-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "COPeoplePickerViewController-Info.plist"; sourceTree = "<group>"; };
+		DC3CFB4F1440C73200B11E92 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		DC3CFB511440C73200B11E92 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		DC3CFB531440C73200B11E92 /* COPeoplePickerViewController-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "COPeoplePickerViewController-Prefix.pch"; sourceTree = "<group>"; };
+		DC3CFB541440C73200B11E92 /* COAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = COAppDelegate.h; sourceTree = "<group>"; };
+		DC3CFB551440C73200B11E92 /* COAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = COAppDelegate.m; sourceTree = "<group>"; };
+		DC3CFB5C1440C78100B11E92 /* COPeoplePickerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = COPeoplePickerViewController.h; sourceTree = "<group>"; };
+		DC3CFB5D1440C78100B11E92 /* COPeoplePickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = COPeoplePickerViewController.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DC3CFB3E1440C73200B11E92 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC3CFB461440C73200B11E92 /* UIKit.framework in Frameworks */,
+				DC3CFB481440C73200B11E92 /* Foundation.framework in Frameworks */,
+				DC3CFB4A1440C73200B11E92 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DC3CFB361440C73200B11E92 = {
+			isa = PBXGroup;
+			children = (
+				DC3CFB4B1440C73200B11E92 /* COPeoplePickerViewController */,
+				DC3CFB441440C73200B11E92 /* Frameworks */,
+				DC3CFB421440C73200B11E92 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DC3CFB421440C73200B11E92 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DC3CFB411440C73200B11E92 /* COPeoplePickerViewController.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DC3CFB441440C73200B11E92 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DC3CFB451440C73200B11E92 /* UIKit.framework */,
+				DC3CFB471440C73200B11E92 /* Foundation.framework */,
+				DC3CFB491440C73200B11E92 /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DC3CFB4B1440C73200B11E92 /* COPeoplePickerViewController */ = {
+			isa = PBXGroup;
+			children = (
+				DC3CFB541440C73200B11E92 /* COAppDelegate.h */,
+				DC3CFB551440C73200B11E92 /* COAppDelegate.m */,
+				DC3CFB5C1440C78100B11E92 /* COPeoplePickerViewController.h */,
+				DC3CFB5D1440C78100B11E92 /* COPeoplePickerViewController.m */,
+				DC3CFB4C1440C73200B11E92 /* Supporting Files */,
+			);
+			path = COPeoplePickerViewController;
+			sourceTree = "<group>";
+		};
+		DC3CFB4C1440C73200B11E92 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				DC3CFB4D1440C73200B11E92 /* COPeoplePickerViewController-Info.plist */,
+				DC3CFB4E1440C73200B11E92 /* InfoPlist.strings */,
+				DC3CFB511440C73200B11E92 /* main.m */,
+				DC3CFB531440C73200B11E92 /* COPeoplePickerViewController-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DC3CFB401440C73200B11E92 /* COPeoplePickerViewController */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC3CFB591440C73200B11E92 /* Build configuration list for PBXNativeTarget "COPeoplePickerViewController" */;
+			buildPhases = (
+				DC3CFB3D1440C73200B11E92 /* Sources */,
+				DC3CFB3E1440C73200B11E92 /* Frameworks */,
+				DC3CFB3F1440C73200B11E92 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = COPeoplePickerViewController;
+			productName = COPeoplePickerViewController;
+			productReference = DC3CFB411440C73200B11E92 /* COPeoplePickerViewController.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DC3CFB381440C73200B11E92 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = chocomoko.com;
+			};
+			buildConfigurationList = DC3CFB3B1440C73200B11E92 /* Build configuration list for PBXProject "COPeoplePickerViewController" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = DC3CFB361440C73200B11E92;
+			productRefGroup = DC3CFB421440C73200B11E92 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DC3CFB401440C73200B11E92 /* COPeoplePickerViewController */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DC3CFB3F1440C73200B11E92 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC3CFB501440C73200B11E92 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DC3CFB3D1440C73200B11E92 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC3CFB521440C73200B11E92 /* main.m in Sources */,
+				DC3CFB561440C73200B11E92 /* COAppDelegate.m in Sources */,
+				DC3CFB5E1440C78100B11E92 /* COPeoplePickerViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		DC3CFB4E1440C73200B11E92 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DC3CFB4F1440C73200B11E92 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		DC3CFB571440C73200B11E92 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		DC3CFB581440C73200B11E92 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DC3CFB5A1440C73200B11E92 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "COPeoplePickerViewController/COPeoplePickerViewController-Prefix.pch";
+				INFOPLIST_FILE = "COPeoplePickerViewController/COPeoplePickerViewController-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		DC3CFB5B1440C73200B11E92 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "COPeoplePickerViewController/COPeoplePickerViewController-Prefix.pch";
+				INFOPLIST_FILE = "COPeoplePickerViewController/COPeoplePickerViewController-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DC3CFB3B1440C73200B11E92 /* Build configuration list for PBXProject "COPeoplePickerViewController" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC3CFB571440C73200B11E92 /* Debug */,
+				DC3CFB581440C73200B11E92 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC3CFB591440C73200B11E92 /* Build configuration list for PBXNativeTarget "COPeoplePickerViewController" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC3CFB5A1440C73200B11E92 /* Debug */,
+				DC3CFB5B1440C73200B11E92 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DC3CFB381440C73200B11E92 /* Project object */;
+}
