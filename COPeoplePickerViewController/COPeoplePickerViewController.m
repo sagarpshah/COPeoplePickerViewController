@@ -159,13 +159,13 @@
   return self;
 }
 
-//- (void)drawRect:(CGRect)rect {
-//  CGContextRef ctx = UIGraphicsGetCurrentContext();
-//  CGContextMoveToPoint(ctx, 0, CGRectGetHeight(self.bounds));
-//  CGContextAddLineToPoint(ctx, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
-//  CGContextSetStrokeColorWithColor(ctx, [UIColor colorWithWhite:0.0 alpha:0.5].CGColor);
-//  CGContextStrokePath(ctx);
-//}
+- (void)drawRect:(CGRect)rect {
+  CGContextRef ctx = UIGraphicsGetCurrentContext();
+  CGContextMoveToPoint(ctx, 0, CGRectGetHeight(self.bounds));
+  CGContextAddLineToPoint(ctx, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
+  CGContextSetStrokeColorWithColor(ctx, [UIColor colorWithWhite:0.0 alpha:0.5].CGColor);
+  CGContextStrokePath(ctx);
+}
 
 - (void)addContact:(id)sender {
   NSLog(@"%s", (char *)_cmd);
