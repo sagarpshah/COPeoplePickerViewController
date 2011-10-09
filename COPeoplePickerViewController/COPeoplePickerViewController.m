@@ -42,9 +42,6 @@
 @property (nonatomic, strong) UIButton *addContactButton;
 @property (nonatomic, strong) NSMutableArray *tokens;
 @property (nonatomic, readonly) CGFloat computedRowHeight;
-
-- (void)layoutTokenField;
-
 @end
 
 #pragma mark - COPeoplePickerViewController
@@ -151,7 +148,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
     
     [self addSubview:self.textField];
     
-    [self layoutTokenField];
+    [self setNeedsLayout];
   }
   return self;
 }
@@ -173,7 +170,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   return MAX(buttonHeight, (kTokenFieldPaddingY * 2.0 + kTokenFieldTokenHeight));
 }
 
-- (void)layoutTokenField {
+- (void)layoutSubviews {
   for (COToken *token in self.tokens) {
     [token removeFromSuperview];
   }
@@ -244,7 +241,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   NSString *text = self.textField.text;
   if ([text length] > 1) {
     [self processToken:[text substringFromIndex:1]];
-    [self layoutTokenField];
+    [self setNeedsLayout];
   }
   return YES;
 }
