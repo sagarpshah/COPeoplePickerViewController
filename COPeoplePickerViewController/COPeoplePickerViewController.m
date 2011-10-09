@@ -41,6 +41,7 @@
 @property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) UIButton *addContactButton;
 @property (nonatomic, strong) NSMutableArray *tokens;
+@property (nonatomic, strong) COToken *selectedToken;
 @property (nonatomic, readonly) CGFloat computedRowHeight;
 @end
 
@@ -108,6 +109,7 @@
 @synthesize textField = textField_;
 @synthesize addContactButton = addContactButton_;
 @synthesize tokens = tokens_;
+@synthesize selectedToken = selectedToken_;
 
 static NSString *kCOTokenFieldDetectorString = @"\u200B";
 
@@ -216,37 +218,61 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   self.frame = tokenFieldFrame;
 }
 
+- (void)selectToken:(COToken *)token {
+  @synchronized (self) {
+    if (token != nil) {
+      self.textField.hidden = YES;
+    }
+    else {
+      self.textField.hidden = NO;
+      [self.textField becomeFirstResponder];
+    }
+    self.selectedToken = token;
+    for (COToken *t in self.tokens) {
+      t.highlighted = (t == token);
+      [t setNeedsDisplay];
+    }
+  }
+}
+
 - (void)modifyToken:(COToken *)token {
   if (token != nil) {
-    if (token.highlighted) {
+    if (token == self.selectedToken) {
       [token removeFromSuperview];
-      [self.tokens removeLastObject];
+      [self.tokens removeObject:token];
       self.textField.hidden = NO;
     }
     else {
-      token.highlighted = YES;
-      self.textField.hidden = YES;
-      [token setNeedsDisplay];
+      [self selectToken:token];
     }
     [self setNeedsLayout];
   }
 }
 
-- (void)modifyLastToken {
-  [self modifyToken:[self.tokens lastObject]];
+- (void)modifySelectedToken {
+  COToken *token = self.selectedToken;
+  if (token == nil) {
+    token = [self.tokens lastObject];
+  }
+  [self modifyToken:token];
 }
 
 - (void)processToken:(NSString *)tokenText {
   COToken *token = [COToken tokenWithTitle:tokenText associatedObject:tokenText container:self];
+  [token addTarget:self action:@selector(selectToken:) forControlEvents:UIControlEventTouchUpInside];
   [self.tokens addObject:token];
   self.textField.text = kCOTokenFieldDetectorString;
+}
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+  [self selectToken:nil];
 }
 
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
   if (string.length == 0 && [textField.text isEqualToString:kCOTokenFieldDetectorString]) {
-    [self modifyLastToken];
+    [self modifySelectedToken];
     return NO;
   }
   return YES;
