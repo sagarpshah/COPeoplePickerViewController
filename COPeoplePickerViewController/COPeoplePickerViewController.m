@@ -47,6 +47,12 @@
 @property (nonatomic, strong) NSMutableArray *tokens;
 @property (nonatomic, strong) COToken *selectedToken;
 @property (nonatomic, readonly) CGFloat computedRowHeight;
+
+- (void)selectToken:(COToken *)token;
+- (void)modifyToken:(COToken *)token;
+- (void)modifySelectedToken;
+- (void)processToken:(NSString *)tokenText;
+
 @end
 
 #pragma mark - COPeoplePickerViewController
@@ -107,7 +113,7 @@
 
 - (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField {
   ABPeoplePickerNavigationController *picker = [ABPeoplePickerNavigationController new];
-  picker.delegate = (id)self;
+  picker.peoplePickerDelegate = self;
   picker.displayedProperties = self.displayedProperties;  
   [self presentModalViewController:picker animated:YES];
 }
@@ -119,11 +125,19 @@
 }
 
 - (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker shouldContinueAfterSelectingPerson:(ABRecordRef)person property:(ABPropertyID)property identifier:(ABMultiValueIdentifier)identifier {
-  return YES;
+
+  ABMutableMultiValueRef multi = ABRecordCopyValue(person, property);
+  NSString *email = CFBridgingRelease(ABMultiValueCopyValueAtIndex(multi, identifier));
+  CFRelease(multi);
+  
+  [self.tokenField processToken:email];
+  [self dismissModalViewControllerAnimated:YES];
+  
+  return NO;
 }
 
 - (void)peoplePickerNavigationControllerDidCancel:(ABPeoplePickerNavigationController *)peoplePicker {
-  NSLog(@"pickerDidCancel");
+  [self dismissModalViewControllerAnimated:YES];
 }
 
 #pragma mark - UITableViewDataSource
@@ -303,6 +317,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   [token addTarget:self action:@selector(selectToken:) forControlEvents:UIControlEventTouchUpInside];
   [self.tokens addObject:token];
   self.textField.text = kCOTokenFieldDetectorString;
+  [self setNeedsLayout];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -329,7 +344,6 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   NSString *text = self.textField.text;
   if ([text length] > 1) {
     [self processToken:[text substringFromIndex:1]];
-    [self setNeedsLayout];
   }
   return YES;
 }
