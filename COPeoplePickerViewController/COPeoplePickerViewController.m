@@ -216,12 +216,27 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   self.frame = tokenFieldFrame;
 }
 
+- (void)modifyToken:(COToken *)token {
+  if (token != nil) {
+    if (token.highlighted) {
+      [token removeFromSuperview];
+      [self.tokens removeLastObject];
+      self.textField.hidden = NO;
+    }
+    else {
+      token.highlighted = YES;
+      self.textField.hidden = YES;
+      [token setNeedsDisplay];
+    }
+    [self setNeedsLayout];
+  }
+}
+
 - (void)modifyLastToken {
-  NSLog(@"modifyLastToken");
+  [self modifyToken:[self.tokens lastObject]];
 }
 
 - (void)processToken:(NSString *)tokenText {
-  NSLog(@"processToken: %@", tokenText);
   COToken *token = [COToken tokenWithTitle:tokenText associatedObject:tokenText container:self];
   [self.tokens addObject:token];
   self.textField.text = kCOTokenFieldDetectorString;
@@ -274,11 +289,14 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   
   [token setTitle:title forState:UIControlStateNormal];
   [token setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+  [token setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
   
   return token;
 }
 
 - (void)drawRect:(CGRect)rect {
+  NSLog(@"drawTokenHighlighted: %i", self.highlighted);
+  
   CGFloat radius = CGRectGetHeight(self.bounds) / 2.0;
   
   UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:radius];
@@ -288,10 +306,19 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   CGContextAddPath(ctx, path.CGPath);
   CGContextClip(ctx);
   
-  NSArray *colors = [NSArray arrayWithObjects:
-                     (__bridge id)[UIColor colorWithRed:0.863 green:0.902 blue:0.969 alpha:1.0].CGColor,
-                     (__bridge id)[UIColor colorWithRed:0.741 green:0.808 blue:0.937 alpha:1.0].CGColor,
-                     nil];
+  NSArray *colors = nil;
+  if (self.highlighted) {
+    colors = [NSArray arrayWithObjects:
+              (__bridge id)[UIColor colorWithRed:0.322 green:0.541 blue:0.976 alpha:1.0].CGColor,
+              (__bridge id)[UIColor colorWithRed:0.235 green:0.329 blue:0.973 alpha:1.0].CGColor,
+              nil];
+  }
+  else {
+    colors = [NSArray arrayWithObjects:
+              (__bridge id)[UIColor colorWithRed:0.863 green:0.902 blue:0.969 alpha:1.0].CGColor,
+              (__bridge id)[UIColor colorWithRed:0.741 green:0.808 blue:0.937 alpha:1.0].CGColor,
+              nil];
+  }
   
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
   CGGradientRef gradient = CGGradientCreateWithColors(colorSpace, (__bridge CFTypeRef)colors, NULL);
@@ -301,7 +328,12 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   CGGradientRelease(gradient);
   CGContextRestoreGState(ctx);
   
-  [[UIColor colorWithRed:0.667 green:0.757 blue:0.914 alpha:1.0] set];
+  if (self.highlighted) {
+    [[UIColor colorWithRed:0.275 green:0.478 blue:0.871 alpha:1.0] set];
+  }
+  else {
+    [[UIColor colorWithRed:0.667 green:0.757 blue:0.914 alpha:1.0] set];
+  }
   
   path = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(self.bounds, 0.5, 0.5) cornerRadius:radius];
   [path setLineWidth:1.0];
