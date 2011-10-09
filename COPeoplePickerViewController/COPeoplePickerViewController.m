@@ -241,6 +241,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
       [token removeFromSuperview];
       [self.tokens removeObject:token];
       self.textField.hidden = NO;
+      self.selectedToken = nil;
     }
     else {
       [self selectToken:token];
@@ -275,10 +276,16 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
     [self modifySelectedToken];
     return NO;
   }
+  if (textField.hidden) {
+    return NO;
+  }
   return YES;
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
+  if (textField.hidden) {
+    return NO;
+  }
   NSString *text = self.textField.text;
   if ([text length] > 1) {
     [self processToken:[text substringFromIndex:1]];
