@@ -54,12 +54,26 @@
 @interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate>
 @property (nonatomic, strong) COTokenField *tokenField;
 @property (nonatomic, strong) UITableView *searchTableView;
-@property (nonatomic, readonly) ABPeoplePickerNavigationController *peoplePicker;
 @end
 
 @implementation COPeoplePickerViewController
 @synthesize tokenField = tokenField_;
 @synthesize searchTableView = searchTableView_;
+@synthesize displayedProperties = displayedProperties_;
+
+- (id)init {
+  self = [super init];
+  if (self) {
+    // DEVNOTE: A workaround to force initialization of ABPropertyIDs.
+    // If we don't create the address book here and try to set |displayedProperties| first
+    // all ABPropertyIDs will default to '0'.
+    //
+    // TODO: file RDAR
+    //
+    CFRelease(ABAddressBookCreate());
+  }
+  return self;
+}
 
 - (void)viewDidLoad {  
   // Configure content view
@@ -89,27 +103,13 @@
   //[self.view addSubview:self.searchTableView];
 }
 
-- (ABPeoplePickerNavigationController *)peoplePicker {
-  static ABPeoplePickerNavigationController *picker;
-  if (picker == nil) {
-    picker = [ABPeoplePickerNavigationController new];
-    picker.delegate = (id)self;
-  }
-  return picker;
-}
-
-- (void)setDisplayedProperties:(NSArray *)displayedProperties {
-  self.peoplePicker.displayedProperties = displayedProperties;
-}
-
-- (NSArray *)displayedProperties {
-  return self.peoplePicker.displayedProperties;
-}
-
 #pragma mark - COTokenFieldDelegate 
 
 - (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField {
-  [self presentModalViewController:self.peoplePicker animated:YES];
+  ABPeoplePickerNavigationController *picker = [ABPeoplePickerNavigationController new];
+  picker.delegate = (id)self;
+  picker.displayedProperties = self.displayedProperties;  
+  [self presentModalViewController:picker animated:YES];
 }
 
 #pragma mark - ABPeoplePickerNavigationControllerDelegate
