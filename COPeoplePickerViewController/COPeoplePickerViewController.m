@@ -312,17 +312,12 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   
   token.frame = (CGRect){CGPointZero, tokenSize};
   token.titleLabel.font = font;
-  
-  [token setTitle:title forState:UIControlStateNormal];
-  [token setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-  [token setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
+  token.title = title;
   
   return token;
 }
 
 - (void)drawRect:(CGRect)rect {
-  NSLog(@"drawTokenHighlighted: %i", self.highlighted);
-  
   CGFloat radius = CGRectGetHeight(self.bounds) / 2.0;
   
   UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:radius];
@@ -364,6 +359,22 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   path = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(self.bounds, 0.5, 0.5) cornerRadius:radius];
   [path setLineWidth:1.0];
   [path stroke];
+  
+  if (self.highlighted) {
+    [[UIColor whiteColor] set];
+  }
+  else {
+    [[UIColor blackColor] set];
+  }
+  
+  UIFont *titleFont = [UIFont systemFontOfSize:kTokenFieldFontSize];
+  CGSize titleSize = [self.title sizeWithFont:titleFont];
+  CGRect titleFrame = CGRectMake((CGRectGetWidth(self.bounds) - titleSize.width) / 2.0,
+                                 (CGRectGetHeight(self.bounds) - titleSize.height) / 2.0,
+                                 titleSize.width,
+                                 titleSize.height);
+  
+  [self.title drawInRect:titleFrame withFont:titleFont lineBreakMode:UILineBreakModeTailTruncation alignment:UITextAlignmentCenter];
 }
 
 @end
