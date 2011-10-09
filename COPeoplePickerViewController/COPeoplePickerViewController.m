@@ -139,12 +139,28 @@
                                                                        CGRectGetHeight(viewBounds) - CGRectGetHeight(tokenFieldFrame))
                                                       style:UITableViewStylePlain];
   self.searchTableView.opaque = NO;
-  self.searchTableView.backgroundColor = [UIColor clearColor];
+  self.searchTableView.backgroundColor = [UIColor whiteColor];
   self.searchTableView.dataSource = self;
   self.searchTableView.delegate = self;
+  self.searchTableView.hidden = YES;
   self.searchTableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
   
-  //[self.view addSubview:self.searchTableView];
+  [self.view addSubview:self.searchTableView];
+  
+  // Subscribe to keyboard notifications
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+}
+
+- (void)viewDidUnload {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)keyboardDidShow:(NSNotification *)note {
+  CGRect keyboardFrame = [[[note userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+  CGPoint keyboardOriginInView = [self.view convertPoint:keyboardFrame.origin fromView:nil];
+  CGFloat tableOriginY = CGRectGetMaxY(self.tokenField.frame);  
+  self.searchTableView.frame = CGRectMake(0, tableOriginY, CGRectGetWidth(self.view.bounds), keyboardOriginInView.y - tableOriginY);
 }
 
 #pragma mark - COTokenFieldDelegate 
@@ -168,6 +184,12 @@
     for (CORecordEmail *email in record.emailAddresses) {
       NSLog(@"\t\t-> %@: %@", email.label, email.address);
     }
+  }
+  if (records.count > 0) {
+    self.searchTableView.hidden = NO;
+  }
+  else {
+    self.searchTableView.hidden = YES;
   }
 }
 
@@ -394,41 +416,40 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 
 - (void)tokenInputChanged:(id)sender {
   NSString *searchText = self.textWithoutDetector;
-  if (searchText.length < 2) {
-    return;
-  }
-  
-  // Generate new search dict only after a certain delay
-  static NSDate *lastUpdated = nil;;
-  static NSMutableArray *records = nil;
-  if (records == nil || [lastUpdated timeIntervalSinceDate:[NSDate date]] < -10) {
-    ABAddressBookRef ab = [self.delegate addressBookForTokenField:self];
-    NSArray *people = CFBridgingRelease(ABAddressBookCopyArrayOfAllPeople(ab));
-    records = [NSMutableArray new];
-    for (id obj in people) {
-      ABRecordRef recordRef = (__bridge CFTypeRef)obj;
-      CORecord *record = [CORecord new];
-      record->record_ = CFRetain(recordRef);
-      [records addObject:record];
+  NSArray *matchedRecords = [NSArray array];
+  if (searchText.length > 2) {
+    // Generate new search dict only after a certain delay
+    static NSDate *lastUpdated = nil;;
+    static NSMutableArray *records = nil;
+    if (records == nil || [lastUpdated timeIntervalSinceDate:[NSDate date]] < -10) {
+      ABAddressBookRef ab = [self.delegate addressBookForTokenField:self];
+      NSArray *people = CFBridgingRelease(ABAddressBookCopyArrayOfAllPeople(ab));
+      records = [NSMutableArray new];
+      for (id obj in people) {
+        ABRecordRef recordRef = (__bridge CFTypeRef)obj;
+        CORecord *record = [CORecord new];
+        record->record_ = CFRetain(recordRef);
+        [records addObject:record];
+      }
+      lastUpdated = [NSDate date];
     }
-    lastUpdated = [NSDate date];
-  }
-  
-  NSIndexSet *resultSet = [records indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-    CORecord *record = (CORecord *)obj;
-    if (containsString(record.fullName, searchText)) {
-      return YES;
-    }
-    for (CORecordEmail *email in record.emailAddresses) {
-      if (containsString(email.address, searchText)) {
+    
+    NSIndexSet *resultSet = [records indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+      CORecord *record = (CORecord *)obj;
+      if (containsString(record.fullName, searchText)) {
         return YES;
       }
-    }
-    return NO;
-  }];
-  
-  // Generate results to pass to the delegate
-  NSArray *matchedRecords = [records objectsAtIndexes:resultSet];
+      for (CORecordEmail *email in record.emailAddresses) {
+        if (containsString(email.address, searchText)) {
+          return YES;
+        }
+      }
+      return NO;
+    }];
+    
+    // Generate results to pass to the delegate
+    matchedRecords = [records objectsAtIndexes:resultSet];
+  }
   [self.delegate tokenField:self updateAddressBookSearchResults:matchedRecords];
 }
 
