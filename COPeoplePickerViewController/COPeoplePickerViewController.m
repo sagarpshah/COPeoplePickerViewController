@@ -59,6 +59,30 @@
 
 @end
 
+#pragma mark - Data Structures
+
+@interface CORecord : NSObject {
+@package
+  ABRecordRef record_;
+}
+@property (nonatomic, readonly) NSString *fullName;
+@property (nonatomic, readonly) NSString *namePrefix;
+@property (nonatomic, readonly) NSString *firstName;
+@property (nonatomic, readonly) NSString *middleName;
+@property (nonatomic, readonly) NSString *lastName;
+@property (nonatomic, readonly) NSString *nameSuffix;
+@property (nonatomic, readonly) NSArray *emailAddresses;
+@end
+
+@interface CORecordEmail : NSObject {
+@package
+  ABMultiValueRef         emails_;
+  ABMultiValueIdentifier  identifier_;
+}
+@property (nonatomic, readonly) NSString *label;
+@property (nonatomic, readonly) NSString *address;
+@end
+
 #pragma mark - COPeoplePickerViewController
 
 @interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate> {
@@ -138,7 +162,13 @@
 }
 
 - (void)tokenField:(COTokenField *)tokenField updateAddressBookSearchResults:(NSArray *)records {
-  NSLog(@"updated records");
+  NSLog(@"matches:");
+  for (CORecord *record in records) {
+    NSLog(@"\t%@:", record.fullName);
+    for (CORecordEmail *email in record.emailAddresses) {
+      NSLog(@"\t\t-> %@: %@", email.label, email.address);
+    }
+  }
 }
 
 #pragma mark - ABPeoplePickerNavigationControllerDelegate
@@ -358,6 +388,10 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   return text;
 }
 
+static BOOL containsString(NSString *haystack, NSString *needle) {
+  return ([haystack rangeOfString:needle options:NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch].location != NSNotFound);
+}
+
 - (void)tokenInputChanged:(id)sender {
   NSString *searchText = self.textWithoutDetector;
   if (searchText.length < 2) {
@@ -365,51 +399,36 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   }
   
   // Generate new search dict only after a certain delay
-  static NSDate *lastUpdated;
-  static NSMutableDictionary *searchDict;
-  if (searchDict == nil || [lastUpdated timeIntervalSinceDate:[NSDate date]] < -10) {
+  static NSDate *lastUpdated = nil;;
+  static NSMutableArray *records = nil;
+  if (records == nil || [lastUpdated timeIntervalSinceDate:[NSDate date]] < -10) {
     ABAddressBookRef ab = [self.delegate addressBookForTokenField:self];
     NSArray *people = CFBridgingRelease(ABAddressBookCopyArrayOfAllPeople(ab));
-    searchDict = [NSMutableDictionary new];
+    records = [NSMutableArray new];
     for (id obj in people) {
-      ABRecordRef record = (__bridge CFTypeRef)obj;
-      
-      // Append name search components
-      __block NSMutableArray *searchComponents = [NSMutableArray new];
-      
-      void (^appendNameStringComponent)(ABPropertyID) = ^(ABPropertyID pid) {
-        NSString *component = CFBridgingRelease(ABRecordCopyValue(record, pid));
-        if (component.length > 0) {
-          [searchComponents addObject:component];
-        }
-      };
-      
-      appendNameStringComponent(kABPersonPrefixProperty);
-      appendNameStringComponent(kABPersonFirstNameProperty);
-      appendNameStringComponent(kABPersonMiddleNameProperty);
-      appendNameStringComponent(kABPersonLastNameProperty);
-      appendNameStringComponent(kABPersonSuffixProperty);
-      
-      // Generate email search string
-      ABMultiValueRef emailValues = ABRecordCopyValue(record, kABPersonEmailProperty);
-      CFIndex emailCount = ABMultiValueGetCount(emailValues);
-      for (CFIndex i=0; i<emailCount; i++) {
-        NSString *email = CFBridgingRelease(ABMultiValueCopyValueAtIndex(emailValues, i));
-        [searchComponents addObject:email];
-      }
-      CFRelease(emailValues);
-      
-      NSString *searchString = [searchComponents componentsJoinedByString:@";"];
-      [searchDict setObject:(__bridge id)record forKey:searchString];
+      ABRecordRef recordRef = (__bridge CFTypeRef)obj;
+      CORecord *record = [CORecord new];
+      record->record_ = CFRetain(recordRef);
+      [records addObject:record];
     }
     lastUpdated = [NSDate date];
   }
   
-  NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(SELF contains[cd] %@)", searchText];
-  NSArray *filteredKeys = [[searchDict allKeys] filteredArrayUsingPredicate:predicate];
+  NSIndexSet *resultSet = [records indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+    CORecord *record = (CORecord *)obj;
+    if (containsString(record.fullName, searchText)) {
+      return YES;
+    }
+    for (CORecordEmail *email in record.emailAddresses) {
+      if (containsString(email.address, searchText)) {
+        return YES;
+      }
+    }
+    return NO;
+  }];
   
   // Generate results to pass to the delegate
-  NSArray *matchedRecords = [searchDict objectsForKeys:filteredKeys notFoundMarker:[NSNull null]];
+  NSArray *matchedRecords = [records objectsAtIndexes:resultSet];
   [self.delegate tokenField:self updateAddressBookSearchResults:matchedRecords];
 }
 
@@ -525,6 +544,79 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
                                  titleSize.height);
   
   [self.title drawInRect:titleFrame withFont:titleFont lineBreakMode:UILineBreakModeTailTruncation alignment:UITextAlignmentCenter];
+}
+
+@end
+
+#pragma mark - CORecord
+
+@implementation CORecord
+
+- (void)dealloc {
+  if (record_) {
+    CFRelease(record_);
+    record_ = NULL;
+  }
+}
+
+- (NSString *)fullName {
+  return CFBridgingRelease(ABRecordCopyCompositeName(record_));
+}
+
+- (NSString *)namePrefix {
+  return CFBridgingRelease(ABRecordCopyValue(record_, kABPersonPrefixProperty));
+}
+
+- (NSString *)firstName {
+  return CFBridgingRelease(ABRecordCopyValue(record_, kABPersonFirstNameProperty));
+}
+
+- (NSString *)middleName {
+  return CFBridgingRelease(ABRecordCopyValue(record_, kABPersonMiddleNameProperty));
+}
+
+- (NSString *)lastName {
+  return CFBridgingRelease(ABRecordCopyValue(record_, kABPersonLastNameProperty));
+}
+
+- (NSString *)nameSuffix {
+  return CFBridgingRelease(ABRecordCopyValue(record_, kABPersonSuffixProperty));
+}
+
+- (NSArray *)emailAddresses {
+  NSMutableArray *addresses = [NSMutableArray new];
+  ABMultiValueRef multi = ABRecordCopyValue(record_, kABPersonEmailProperty);
+  CFIndex multiCount = ABMultiValueGetCount(multi);
+  for (CFIndex i=0; i<multiCount; i++) {
+    CORecordEmail *email = [CORecordEmail new];
+    email->emails_ = CFRetain(multi);
+    email->identifier_ = ABMultiValueGetIdentifierAtIndex(multi, i);
+    [addresses addObject:email];
+  }
+  CFRelease(multi);
+  return [NSArray arrayWithArray:addresses];
+}
+
+@end
+
+@implementation CORecordEmail
+
+- (void)dealloc {
+  if (emails_ != NULL) {
+    CFRelease(emails_);
+    emails_ = NULL;
+  }
+}
+
+- (NSString *)label {
+  CFStringRef label = ABMultiValueCopyLabelAtIndex(emails_, ABMultiValueGetIndexForIdentifier(emails_, identifier_));
+  CFStringRef localizedLabel = ABAddressBookCopyLocalizedLabel(label);
+  CFRelease(label);
+  return CFBridgingRelease(localizedLabel);
+}
+
+- (NSString *)address {
+  return CFBridgingRelease(ABMultiValueCopyValueAtIndex(emails_, ABMultiValueGetIndexForIdentifier(emails_, identifier_)));
 }
 
 @end
