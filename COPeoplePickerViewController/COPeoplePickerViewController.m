@@ -243,7 +243,7 @@
   COToken *token = [self buttonWithType:UIButtonTypeCustom];
   token.associatedObject = obj;
   token.container = container;
-  token.backgroundColor = [UIColor redColor]; // TODO: remove 
+  token.backgroundColor = [UIColor clearColor];
   
   UIFont *font = [UIFont systemFontOfSize:kTokenFieldFontSize];
   CGSize tokenSize = [title sizeWithFont:font];
@@ -257,8 +257,39 @@
   token.titleLabel.font = font;
   
   [token setTitle:title forState:UIControlStateNormal];
+  [token setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
   
   return token;
+}
+
+- (void)drawRect:(CGRect)rect {
+  CGFloat radius = CGRectGetHeight(self.bounds) / 2.0;
+  
+  UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:radius];
+  
+  CGContextRef ctx = UIGraphicsGetCurrentContext();
+  CGContextSaveGState(ctx);
+  CGContextAddPath(ctx, path.CGPath);
+  CGContextClip(ctx);
+  
+  NSArray *colors = [NSArray arrayWithObjects:
+                     (__bridge id)[UIColor colorWithRed:0.863 green:0.902 blue:0.969 alpha:1.0].CGColor,
+                     (__bridge id)[UIColor colorWithRed:0.741 green:0.808 blue:0.937 alpha:1.0].CGColor,
+                     nil];
+  
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGGradientRef gradient = CGGradientCreateWithColors(colorSpace, (__bridge CFTypeRef)colors, NULL);
+  CGColorSpaceRelease(colorSpace);
+  
+  CGContextDrawLinearGradient(ctx, gradient, CGPointZero, CGPointMake(0, CGRectGetHeight(self.bounds)), 0);
+  CGGradientRelease(gradient);
+  CGContextRestoreGState(ctx);
+  
+  [[UIColor colorWithRed:0.667 green:0.757 blue:0.914 alpha:1.0] set];
+  
+  path = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(self.bounds, 0.5, 0.5) cornerRadius:radius];
+  [path setLineWidth:1.0];
+  [path stroke];
 }
 
 @end
