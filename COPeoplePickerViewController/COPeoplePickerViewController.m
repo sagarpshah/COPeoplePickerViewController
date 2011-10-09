@@ -25,17 +25,15 @@
 #pragma mark - COTokenField Interface & Delegate Protocol
 
 @protocol COTokenFieldDelegate <NSObject>
-//@required
-//
-//- (void)tokenField:(COTokenField *)tokenField textChanged:(NSString *)text;
-//- (void)tokenFieldDidReturn:(COTokenField *)tokenField;
+
+// TODO: implement
 
 @end
 
 #define kTokenFieldFontSize 14.0
 #define kTokenFieldPaddingX 6.0
 #define kTokenFieldPaddingY 6.0
-#define kTokenFieldRowHeight (kTokenFieldPaddingY * 2.0 + kTokenFieldFontSize + 4.0)//44.0
+#define kTokenFieldTokenHeight (kTokenFieldFontSize + 4.0)
 #define kTokenFieldMaxTokenWidth 260.0
 
 @interface COTokenField : UIView <UITextFieldDelegate>
@@ -43,6 +41,7 @@
 @property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) UIButton *addContactButton;
 @property (nonatomic, strong) NSMutableArray *tokens;
+@property (nonatomic, readonly) CGFloat computedRowHeight;
 
 - (void)layoutTokenField;
 
@@ -101,17 +100,7 @@
 
 #pragma mark - UITableViewDelegate
 
-// implement
-
-//#pragma mark - COTokenFieldDelegate
-//
-//- (void)tokenField:(COTokenField *)tokenField textChanged:(NSString *)text {
-//  NSLog(@"search: '%@'", text);
-//}
-//
-//- (void)tokenFieldDidReturn:(COTokenField *)tokenField {
-//  
-//}
+// TODO: implement
 
 @end
 
@@ -145,7 +134,7 @@
     [self addSubview:self.addContactButton];
     
     // Setup text field
-    CGFloat textFieldHeight = kTokenFieldRowHeight;
+    CGFloat textFieldHeight = self.computedRowHeight;
     self.textField = [[UITextField alloc] initWithFrame:CGRectMake(kTokenFieldPaddingX,
                                                                    (CGRectGetHeight(self.bounds) - textFieldHeight) / 2.0,
                                                                    CGRectGetWidth(self.bounds) - CGRectGetWidth(buttonFrame) - kTokenFieldPaddingX * 3.0,
@@ -176,6 +165,11 @@
   NSLog(@"%s", (char *)_cmd);
 }
 
+- (CGFloat)computedRowHeight {
+  CGFloat buttonHeight = CGRectGetHeight(self.addContactButton.frame);
+  return MAX(buttonHeight, (kTokenFieldPaddingY * 2.0 + kTokenFieldTokenHeight));
+}
+
 - (void)layoutTokenField {
   for (COToken *token in self.tokens) {
     [token removeFromSuperview];
@@ -185,6 +179,8 @@
   
   CGFloat left = kTokenFieldPaddingX;
   CGFloat maxLeft = CGRectGetWidth(self.bounds) - kTokenFieldPaddingX;
+  CGFloat rowHeight = self.computedRowHeight;
+  
   for (NSInteger i=0; i<tokenCount; i++) {
     COToken *token = [self.tokens objectAtIndex:i];
     CGFloat right = left + CGRectGetWidth(token.bounds);
@@ -195,7 +191,7 @@
     
     // Adjust token frame
     CGRect tokenFrame = token.frame;
-    tokenFrame.origin = CGPointMake(left, (CGFloat)row * kTokenFieldRowHeight + (kTokenFieldRowHeight - CGRectGetHeight(tokenFrame)) / 2.0 + kTokenFieldPaddingY);
+    tokenFrame.origin = CGPointMake(left, (CGFloat)row * rowHeight + (rowHeight - CGRectGetHeight(tokenFrame)) / 2.0 + kTokenFieldPaddingY);
     token.frame = tokenFrame;
     
     left += CGRectGetWidth(tokenFrame) + kTokenFieldPaddingX;
@@ -210,12 +206,12 @@
   }
   
   CGRect textFieldFrame = self.textField.frame;
-  textFieldFrame.origin = CGPointMake(left, (CGFloat)row * kTokenFieldRowHeight + (kTokenFieldRowHeight - CGRectGetHeight(textFieldFrame)) / 2.0 + kTokenFieldPaddingY);
+  textFieldFrame.origin = CGPointMake(left, (CGFloat)row * rowHeight + (rowHeight - CGRectGetHeight(textFieldFrame)) / 2.0 + kTokenFieldPaddingY);
   textFieldFrame.size = CGSizeMake(maxLeftWithButton - left, CGRectGetHeight(textFieldFrame));
   self.textField.frame = textFieldFrame;
   
   CGRect tokenFieldFrame = self.frame;
-  CGFloat minHeight = MAX(kTokenFieldRowHeight, CGRectGetHeight(self.addContactButton.frame) + kTokenFieldPaddingY * 2.0);
+  CGFloat minHeight = MAX(rowHeight, CGRectGetHeight(self.addContactButton.frame) + kTokenFieldPaddingY * 2.0);
   tokenFieldFrame.size.height = MAX(minHeight, CGRectGetMaxY(textFieldFrame) + kTokenFieldPaddingY);
   self.frame = tokenFieldFrame;
 }
