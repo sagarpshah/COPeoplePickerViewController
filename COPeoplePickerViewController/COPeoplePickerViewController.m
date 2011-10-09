@@ -211,9 +211,9 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
 
 - (void)drawRect:(CGRect)rect {
   CGContextRef ctx = UIGraphicsGetCurrentContext();
-  CGContextMoveToPoint(ctx, 0, CGRectGetHeight(self.bounds));
-  CGContextAddLineToPoint(ctx, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
-  CGContextSetStrokeColorWithColor(ctx, [UIColor colorWithWhite:0.0 alpha:0.5].CGColor);
+  CGContextMoveToPoint(ctx, 0, CGRectGetHeight(self.bounds) - 0.5);
+  CGContextAddLineToPoint(ctx, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) - 0.5);
+  CGContextSetStrokeColorWithColor(ctx, [UIColor colorWithWhite:0.0 alpha:0.25].CGColor);
   CGContextStrokePath(ctx);
 }
 
@@ -270,6 +270,8 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   CGFloat minHeight = MAX(rowHeight, CGRectGetHeight(self.addContactButton.frame) + kTokenFieldPaddingY * 2.0);
   tokenFieldFrame.size.height = MAX(minHeight, CGRectGetMaxY(textFieldFrame) + kTokenFieldPaddingY);
   self.frame = tokenFieldFrame;
+  
+  [self setNeedsDisplay];
 }
 
 - (void)selectToken:(COToken *)token {
