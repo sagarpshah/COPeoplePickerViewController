@@ -33,8 +33,9 @@
 @end
 
 #define kTokenFieldFontSize 14.0
-#define kTokenFieldRowHeight 44.0
-#define kTokenFieldPadding 6.0
+#define kTokenFieldPaddingX 6.0
+#define kTokenFieldPaddingY 6.0
+#define kTokenFieldRowHeight (kTokenFieldPaddingY * 2.0 + kTokenFieldFontSize + 4.0)//44.0
 #define kTokenFieldMaxTokenWidth 260.0
 
 @interface COTokenField : UIView <UITextFieldDelegate>
@@ -42,6 +43,9 @@
 @property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) UIButton *addContactButton;
 @property (nonatomic, strong) NSMutableArray *tokens;
+
+- (void)layoutTokenField;
+
 @end
 
 #pragma mark - COPeoplePickerViewController
@@ -120,7 +124,6 @@
 @synthesize tokens = tokens_;
 
 - (id)initWithFrame:(CGRect)frame {
-  frame.size.height = kTokenFieldRowHeight;
   self = [super initWithFrame:frame];
   if (self) {
     self.tokens = [NSMutableArray new];
@@ -134,8 +137,8 @@
     [self.addContactButton addTarget:self action:@selector(addContact:) forControlEvents:UIControlEventTouchUpInside];
     
     CGRect buttonFrame = self.addContactButton.frame;
-    self.addContactButton.frame = CGRectMake(CGRectGetWidth(self.bounds) - CGRectGetWidth(buttonFrame) - kTokenFieldPadding,
-                                             (CGRectGetHeight(self.bounds) - CGRectGetHeight(buttonFrame)) / 2.0,
+    self.addContactButton.frame = CGRectMake(CGRectGetWidth(self.bounds) - CGRectGetWidth(buttonFrame) - kTokenFieldPaddingX,
+                                             CGRectGetHeight(self.bounds) - CGRectGetHeight(buttonFrame) - kTokenFieldPaddingY,
                                              buttonFrame.size.height,
                                              buttonFrame.size.width);
     
@@ -143,18 +146,20 @@
     
     // Setup text field
     CGFloat textFieldHeight = kTokenFieldRowHeight;
-    self.textField = [[UITextField alloc] initWithFrame:CGRectMake(kTokenFieldPadding,
+    self.textField = [[UITextField alloc] initWithFrame:CGRectMake(kTokenFieldPaddingX,
                                                                    (CGRectGetHeight(self.bounds) - textFieldHeight) / 2.0,
-                                                                   CGRectGetWidth(self.bounds) - CGRectGetWidth(buttonFrame) - kTokenFieldPadding * 3.0,
+                                                                   CGRectGetWidth(self.bounds) - CGRectGetWidth(buttonFrame) - kTokenFieldPaddingX * 3.0,
                                                                    textFieldHeight)];
     self.textField.opaque = NO;
-    self.textField.backgroundColor = [UIColor greenColor];
+    self.textField.backgroundColor = [UIColor clearColor];
     self.textField.font = [UIFont systemFontOfSize:kTokenFieldFontSize];
     self.textField.autocorrectionType = UITextAutocorrectionTypeNo;
     self.textField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
     self.textField.delegate = self;
     
     [self addSubview:self.textField];
+    
+    [self layoutTokenField];
   }
   return self;
 }
@@ -178,39 +183,40 @@
   NSUInteger row = 0;
   NSInteger tokenCount = self.tokens.count;
   
-  CGFloat left = kTokenFieldPadding;
-  CGFloat maxLeft = CGRectGetWidth(self.bounds) - kTokenFieldPadding;
+  CGFloat left = kTokenFieldPaddingX;
+  CGFloat maxLeft = CGRectGetWidth(self.bounds) - kTokenFieldPaddingX;
   for (NSInteger i=0; i<tokenCount; i++) {
     COToken *token = [self.tokens objectAtIndex:i];
     CGFloat right = left + CGRectGetWidth(token.bounds);
     if (right > maxLeft) {
       row++;
-      left = kTokenFieldPadding;
+      left = kTokenFieldPaddingX;
     }
     
     // Adjust token frame
     CGRect tokenFrame = token.frame;
-    tokenFrame.origin = CGPointMake(left, (CGFloat)row * kTokenFieldRowHeight + (kTokenFieldRowHeight - CGRectGetHeight(tokenFrame)) / 2.0);
+    tokenFrame.origin = CGPointMake(left, (CGFloat)row * kTokenFieldRowHeight + (kTokenFieldRowHeight - CGRectGetHeight(tokenFrame)) / 2.0 + kTokenFieldPaddingY);
     token.frame = tokenFrame;
     
-    left += CGRectGetWidth(tokenFrame) + kTokenFieldPadding;
+    left += CGRectGetWidth(tokenFrame) + kTokenFieldPaddingX;
     
     [self addSubview:token];
   }
   
-  CGFloat maxLeftWithButton = maxLeft - kTokenFieldPadding - CGRectGetWidth(self.addContactButton.frame);
+  CGFloat maxLeftWithButton = maxLeft - kTokenFieldPaddingX - CGRectGetWidth(self.addContactButton.frame);
   if (maxLeftWithButton - left < 50) {
     row++;
-    left = kTokenFieldPadding;
+    left = kTokenFieldPaddingX;
   }
   
   CGRect textFieldFrame = self.textField.frame;
-  textFieldFrame.origin = CGPointMake(left, (CGFloat)row * kTokenFieldRowHeight + (kTokenFieldRowHeight - CGRectGetHeight(textFieldFrame)) / 2.0);
+  textFieldFrame.origin = CGPointMake(left, (CGFloat)row * kTokenFieldRowHeight + (kTokenFieldRowHeight - CGRectGetHeight(textFieldFrame)) / 2.0 + kTokenFieldPaddingY);
   textFieldFrame.size = CGSizeMake(maxLeftWithButton - left, CGRectGetHeight(textFieldFrame));
   self.textField.frame = textFieldFrame;
   
   CGRect tokenFieldFrame = self.frame;
-  tokenFieldFrame.size.height = CGRectGetMaxY(textFieldFrame);
+  CGFloat minHeight = MAX(kTokenFieldRowHeight, CGRectGetHeight(self.addContactButton.frame) + kTokenFieldPaddingY * 2.0);
+  tokenFieldFrame.size.height = MAX(minHeight, CGRectGetMaxY(textFieldFrame) + kTokenFieldPaddingY);
   self.frame = tokenFieldFrame;
 }
 
@@ -249,10 +255,10 @@
   UIFont *font = [UIFont systemFontOfSize:kTokenFieldFontSize];
   CGSize tokenSize = [title sizeWithFont:font];
   tokenSize.width = MIN(kTokenFieldMaxTokenWidth, tokenSize.width);
-  tokenSize.width += kTokenFieldPadding * 2.0;
+  tokenSize.width += kTokenFieldPaddingX * 2.0;
   
   tokenSize.height = MIN(kTokenFieldFontSize, tokenSize.height);
-  tokenSize.height += kTokenFieldPadding * 2.0;
+  tokenSize.height += kTokenFieldPaddingY * 2.0;
   
   token.frame = (CGRect){CGPointZero, tokenSize};
   token.titleLabel.font = font;
