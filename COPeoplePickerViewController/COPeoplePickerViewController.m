@@ -8,6 +8,9 @@
 
 #import "COPeoplePickerViewController.h"
 
+#import <AddressBook/AddressBook.h>
+#import <AddressBookUI/AddressBookUI.h>
+
 
 #pragma mark - COToken
 
@@ -25,8 +28,9 @@
 #pragma mark - COTokenField Interface & Delegate Protocol
 
 @protocol COTokenFieldDelegate <NSObject>
+@required
 
-// TODO: implement
+- (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField;
 
 @end
 
@@ -47,9 +51,10 @@
 
 #pragma mark - COPeoplePickerViewController
 
-@interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate>
+@interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate>
 @property (nonatomic, strong) COTokenField *tokenField;
 @property (nonatomic, strong) UITableView *searchTableView;
+@property (nonatomic, readonly) ABPeoplePickerNavigationController *peoplePicker;
 @end
 
 @implementation COPeoplePickerViewController
@@ -84,7 +89,42 @@
   //[self.view addSubview:self.searchTableView];
 }
 
+- (ABPeoplePickerNavigationController *)peoplePicker {
+  static ABPeoplePickerNavigationController *picker;
+  if (picker == nil) {
+    picker = [ABPeoplePickerNavigationController new];
+    picker.delegate = (id)self;
+  }
+  return picker;
+}
 
+- (void)setDisplayedProperties:(NSArray *)displayedProperties {
+  self.peoplePicker.displayedProperties = displayedProperties;
+}
+
+- (NSArray *)displayedProperties {
+  return self.peoplePicker.displayedProperties;
+}
+
+#pragma mark - COTokenFieldDelegate 
+
+- (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField {
+  [self presentModalViewController:self.peoplePicker animated:YES];
+}
+
+#pragma mark - ABPeoplePickerNavigationControllerDelegate
+
+- (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker shouldContinueAfterSelectingPerson:(ABRecordRef)person {
+  return YES;
+}
+
+- (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker shouldContinueAfterSelectingPerson:(ABRecordRef)person property:(ABPropertyID)property identifier:(ABMultiValueIdentifier)identifier {
+  return YES;
+}
+
+- (void)peoplePickerNavigationControllerDidCancel:(ABPeoplePickerNavigationController *)peoplePicker {
+  NSLog(@"pickerDidCancel");
+}
 
 #pragma mark - UITableViewDataSource
 
@@ -164,7 +204,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
 }
 
 - (void)addContact:(id)sender {
-  NSLog(@"%s", (char *)_cmd);
+  [self.delegate tokenFieldDidPressAddContactButton:self];
 }
 
 - (CGFloat)computedRowHeight {

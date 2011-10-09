@@ -9,6 +9,9 @@
 #import "COAppDelegate.h"
 #import "COPeoplePickerViewController.h"
 
+#import <AddressBook/AddressBook.h>
+
+
 @implementation COAppDelegate
 
 @synthesize window = _window;
@@ -20,7 +23,10 @@
   self.window.backgroundColor = [UIColor whiteColor];
   [self.window makeKeyAndVisible];
   
-  self.window.rootViewController = [COPeoplePickerViewController new];
+  COPeoplePickerViewController *picker = [COPeoplePickerViewController new];
+  picker.displayedProperties = [NSArray arrayWithObject:[NSNumber numberWithInteger:kABPersonEmailProperty]];
+  
+  self.window.rootViewController = picker;
   
   return YES;
 }

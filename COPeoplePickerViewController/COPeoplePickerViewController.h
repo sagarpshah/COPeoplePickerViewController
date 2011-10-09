@@ -10,4 +10,10 @@
 
 @interface COPeoplePickerViewController : UIViewController
 
+// An array of ABPropertyID listing the properties that should be visible when viewing a person.
+// If you are interested in one particular type of data (for example a phone number), displayedProperties
+// should be an array with a single NSNumber instance (representing kABPersonPhoneProperty).
+// Note that name information will always be shown if available.
+@property (nonatomic, copy) NSArray *displayedProperties;
+
 @end
