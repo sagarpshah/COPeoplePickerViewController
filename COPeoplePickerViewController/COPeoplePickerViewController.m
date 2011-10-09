@@ -47,17 +47,22 @@
 @property (nonatomic, strong) NSMutableArray *tokens;
 @property (nonatomic, strong) COToken *selectedToken;
 @property (nonatomic, readonly) CGFloat computedRowHeight;
+@property (nonatomic, readonly) NSString *textWithoutDetector;
 
 - (void)selectToken:(COToken *)token;
 - (void)modifyToken:(COToken *)token;
 - (void)modifySelectedToken;
 - (void)processToken:(NSString *)tokenText;
+- (void)tokenInputChanged:(id)sender;
 
 @end
 
 #pragma mark - COPeoplePickerViewController
 
-@interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate>
+@interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate> {
+@package
+  ABAddressBookRef addressBook_;
+}
 @property (nonatomic, strong) COTokenField *tokenField;
 @property (nonatomic, strong) UITableView *searchTableView;
 @end
@@ -76,9 +81,16 @@
     //
     // TODO: file RDAR
     //
-    CFRelease(ABAddressBookCreate());
+    addressBook_ = ABAddressBookCreate();
   }
   return self;
+}
+
+- (void)dealloc {
+  if (addressBook_ != NULL) {
+    CFRelease(addressBook_);
+    addressBook_ = NULL;
+  }
 }
 
 - (void)viewDidLoad {  
@@ -113,6 +125,7 @@
 
 - (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField {
   ABPeoplePickerNavigationController *picker = [ABPeoplePickerNavigationController new];
+  picker.addressBook = addressBook_;
   picker.peoplePickerDelegate = self;
   picker.displayedProperties = self.displayedProperties;  
   [self presentModalViewController:picker animated:YES];
@@ -125,7 +138,6 @@
 }
 
 - (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker shouldContinueAfterSelectingPerson:(ABRecordRef)person property:(ABPropertyID)property identifier:(ABMultiValueIdentifier)identifier {
-
   ABMutableMultiValueRef multi = ABRecordCopyValue(person, property);
   NSString *email = CFBridgingRelease(ABMultiValueCopyValueAtIndex(multi, identifier));
   CFRelease(multi);
@@ -201,6 +213,8 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
     self.textField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
     self.textField.text = kCOTokenFieldDetectorString;
     self.textField.delegate = self;
+    
+    [self.textField addTarget:self action:@selector(tokenInputChanged:) forControlEvents:UIControlEventEditingChanged];
     
     [self addSubview:self.textField];
     
@@ -326,6 +340,18 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   [self selectToken:nil];
 }
 
+- (NSString *)textWithoutDetector {
+  NSString *text = self.textField.text;
+  if (text.length > 0) {
+    return [text substringFromIndex:1];
+  }
+  return text;
+}
+
+- (void)tokenInputChanged:(id)sender {
+  NSLog(@"inputChanged: %@", self.textWithoutDetector);
+}
+
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
@@ -333,7 +359,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
     [self modifySelectedToken];
     return NO;
   }
-  if (textField.hidden) {
+  else if (textField.hidden) {
     return NO;
   }
   return YES;
