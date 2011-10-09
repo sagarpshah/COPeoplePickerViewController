@@ -226,6 +226,7 @@
     COToken *token = [COToken tokenWithTitle:text associatedObject:text container:self];
     [self.tokens addObject:token];
     [self layoutTokenField];
+    self.textField.text = nil;
   }
   return YES;
 }
