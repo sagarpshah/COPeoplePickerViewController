@@ -31,6 +31,7 @@
 @required
 
 - (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField;
+- (ABAddressBookRef)addressBookForTokenField:(COTokenField *)tokenField;
 
 @end
 
@@ -129,6 +130,10 @@
   picker.peoplePickerDelegate = self;
   picker.displayedProperties = self.displayedProperties;  
   [self presentModalViewController:picker animated:YES];
+}
+
+- (ABAddressBookRef)addressBookForTokenField:(COTokenField *)tokenField {
+  return addressBook_;
 }
 
 #pragma mark - ABPeoplePickerNavigationControllerDelegate
@@ -349,7 +354,56 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
 }
 
 - (void)tokenInputChanged:(id)sender {
-  NSLog(@"inputChanged: %@", self.textWithoutDetector);
+  NSString *searchText = self.textWithoutDetector;
+  if (searchText.length < 2) {
+    return;
+  }
+  
+  // Generate new search dict only after a certain delay
+  static NSDate *lastUpdated;
+  static NSMutableDictionary *searchDict;
+  if (searchDict == nil || [lastUpdated timeIntervalSinceDate:[NSDate date]] < -10) {
+    ABAddressBookRef ab = [self.delegate addressBookForTokenField:self];
+    NSArray *people = CFBridgingRelease(ABAddressBookCopyArrayOfAllPeople(ab));
+    searchDict = [NSMutableDictionary new];
+    for (id obj in people) {
+      ABRecordRef record = (__bridge CFTypeRef)obj;
+      
+      // Append name search components
+      __block NSMutableArray *searchComponents = [NSMutableArray new];
+      
+      void (^appendNameStringComponent)(ABPropertyID) = ^(ABPropertyID pid) {
+        NSString *component = CFBridgingRelease(ABRecordCopyValue(record, pid));
+        if (component.length > 0) {
+          [searchComponents addObject:component];
+        }
+      };
+      
+      appendNameStringComponent(kABPersonPrefixProperty);
+      appendNameStringComponent(kABPersonFirstNameProperty);
+      appendNameStringComponent(kABPersonMiddleNameProperty);
+      appendNameStringComponent(kABPersonLastNameProperty);
+      appendNameStringComponent(kABPersonSuffixProperty);
+      
+      // Generate email search string
+      ABMultiValueRef emailValues = ABRecordCopyValue(record, kABPersonEmailProperty);
+      CFIndex emailCount = ABMultiValueGetCount(emailValues);
+      for (CFIndex i=0; i<emailCount; i++) {
+        NSString *email = CFBridgingRelease(ABMultiValueCopyValueAtIndex(emailValues, i));
+        [searchComponents addObject:email];
+      }
+      CFRelease(emailValues);
+      
+      NSString *searchString = [searchComponents componentsJoinedByString:@";"];
+      [searchDict setObject:(__bridge id)record forKey:searchString];
+    }
+    lastUpdated = [NSDate date];
+  }
+  
+  NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(SELF contains[cd] %@)", searchText];
+  NSArray *filteredKeys = [[searchDict allKeys] filteredArrayUsingPredicate:predicate];
+  
+  NSLog(@"inputChanged: %i", filteredKeys.count);
 }
 
 #pragma mark - UITextFieldDelegate

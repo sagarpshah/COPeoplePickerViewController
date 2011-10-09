@@ -14,6 +14,9 @@
 // If you are interested in one particular type of data (for example a phone number), displayedProperties
 // should be an array with a single NSNumber instance (representing kABPersonPhoneProperty).
 // Note that name information will always be shown if available.
+//
+// DEVNOTE: currently only supports email (extend if you need more)
+//
 @property (nonatomic, copy) NSArray *displayedProperties;
 
 @end
