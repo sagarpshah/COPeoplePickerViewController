@@ -32,6 +32,7 @@
 
 - (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField;
 - (ABAddressBookRef)addressBookForTokenField:(COTokenField *)tokenField;
+- (void)tokenField:(COTokenField *)tokenField updateAddressBookSearchResults:(NSArray *)records;
 
 @end
 
@@ -134,6 +135,10 @@
 
 - (ABAddressBookRef)addressBookForTokenField:(COTokenField *)tokenField {
   return addressBook_;
+}
+
+- (void)tokenField:(COTokenField *)tokenField updateAddressBookSearchResults:(NSArray *)records {
+  NSLog(@"updated records");
 }
 
 #pragma mark - ABPeoplePickerNavigationControllerDelegate
@@ -403,7 +408,9 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(SELF contains[cd] %@)", searchText];
   NSArray *filteredKeys = [[searchDict allKeys] filteredArrayUsingPredicate:predicate];
   
-  NSLog(@"inputChanged: %i", filteredKeys.count);
+  // Generate results to pass to the delegate
+  NSArray *matchedRecords = [searchDict objectsForKeys:filteredKeys notFoundMarker:[NSNull null]];
+  [self.delegate tokenField:self updateAddressBookSearchResults:matchedRecords];
 }
 
 #pragma mark - UITextFieldDelegate
