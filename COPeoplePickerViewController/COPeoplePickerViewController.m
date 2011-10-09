@@ -112,6 +112,8 @@
 @synthesize addContactButton = addContactButton_;
 @synthesize tokens = tokens_;
 
+static NSString *kCOTokenFieldDetectorString = @"\u200B";
+
 - (id)initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
   if (self) {
@@ -144,6 +146,7 @@
     self.textField.font = [UIFont systemFontOfSize:kTokenFieldFontSize];
     self.textField.autocorrectionType = UITextAutocorrectionTypeNo;
     self.textField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+    self.textField.text = kCOTokenFieldDetectorString;
     self.textField.delegate = self;
     
     [self addSubview:self.textField];
@@ -216,19 +219,32 @@
   self.frame = tokenFieldFrame;
 }
 
+- (void)modifyLastToken {
+  NSLog(@"modifyLastToken");
+}
+
+- (void)processToken:(NSString *)tokenText {
+  NSLog(@"processToken: %@", tokenText);
+  COToken *token = [COToken tokenWithTitle:tokenText associatedObject:tokenText container:self];
+  [self.tokens addObject:token];
+  self.textField.text = kCOTokenFieldDetectorString;
+}
+
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+  if (string.length == 0 && [textField.text isEqualToString:kCOTokenFieldDetectorString]) {
+    [self modifyLastToken];
+    return NO;
+  }
   return YES;
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
   NSString *text = self.textField.text;
-  if ([text length] > 0) {
-    COToken *token = [COToken tokenWithTitle:text associatedObject:text container:self];
-    [self.tokens addObject:token];
+  if ([text length] > 1) {
+    [self processToken:[text substringFromIndex:1]];
     [self layoutTokenField];
-    self.textField.text = nil;
   }
   return YES;
 }
