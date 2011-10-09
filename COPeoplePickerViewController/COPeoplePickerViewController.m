@@ -247,8 +247,11 @@
   
   UIFont *font = [UIFont systemFontOfSize:kTokenFieldFontSize];
   CGSize tokenSize = [title sizeWithFont:font];
-  tokenSize.width = MIN(kTokenFieldMaxTokenWidth + kTokenFieldPadding * 2.0, tokenSize.width);
-  tokenSize.height = MIN(kTokenFieldFontSize + kTokenFieldPadding, tokenSize.height);
+  tokenSize.width = MIN(kTokenFieldMaxTokenWidth, tokenSize.width);
+  tokenSize.width += kTokenFieldPadding * 2.0;
+  
+  tokenSize.height = MIN(kTokenFieldFontSize, tokenSize.height);
+  tokenSize.height += kTokenFieldPadding * 2.0;
   
   token.frame = (CGRect){CGPointZero, tokenSize};
   token.titleLabel.font = font;
