@@ -166,6 +166,7 @@
   
   // Create the scroll view
   self.tokenFieldScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(viewBounds), self.tokenField.computedRowHeight)];
+  self.tokenFieldScrollView.backgroundColor = [UIColor whiteColor];
   
   [self.view addSubview:self.searchTableView];
   [self.view addSubview:self.tokenFieldScrollView];
