@@ -194,6 +194,8 @@
                                    CGRectGetMinY(keyboardFrame) - CGRectGetMaxY(self.tokenFieldScrollView.frame));
     self.searchTableView.frame = tableFrame;
   }
+  CGFloat contentOffset = MAX(0, CGRectGetHeight(tokenFieldBounds) - CGRectGetHeight(self.tokenFieldScrollView.bounds));
+  [self.tokenFieldScrollView setContentOffset:CGPointMake(0, contentOffset) animated:YES];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
