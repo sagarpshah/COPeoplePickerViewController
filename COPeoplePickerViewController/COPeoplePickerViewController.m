@@ -53,6 +53,7 @@
 #define kTokenFieldPaddingY 6.0
 #define kTokenFieldTokenHeight (kTokenFieldFontSize + 4.0)
 #define kTokenFieldMaxTokenWidth 260.0
+#define kTokenFieldFrameKeyPath @"frame"
 
 @interface COTokenField : UIView <UITextFieldDelegate>
 @property (nonatomic, weak) id<COTokenFieldDelegate> tokenFieldDelegate;
@@ -100,14 +101,17 @@
 @interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate> {
 @package
   ABAddressBookRef addressBook_;
+  CGRect           keyboardFrame_;
 }
 @property (nonatomic, strong) COTokenField *tokenField;
+@property (nonatomic, strong) UIScrollView *tokenFieldScrollView;
 @property (nonatomic, strong) UITableView *searchTableView;
 @property (nonatomic, strong) NSArray *discreteSearchResults;
 @end
 
 @implementation COPeoplePickerViewController
 @synthesize tokenField = tokenField_;
+@synthesize tokenFieldScrollView = tokenFieldScrollView_;
 @synthesize searchTableView = searchTableView_;
 @synthesize displayedProperties = displayedProperties_;
 @synthesize discreteSearchResults = discreteSearchResults_;
@@ -115,6 +119,7 @@
 - (id)init {
   self = [super init];
   if (self) {
+    keyboardFrame_ = CGRectNull;
     // DEVNOTE: A workaround to force initialization of ABPropertyIDs.
     // If we don't create the address book here and try to set |displayedProperties| first
     // all ABPropertyIDs will default to '0'.
@@ -140,9 +145,11 @@
   // Configure token field
   CGRect viewBounds = self.view.bounds;
   CGRect tokenFieldFrame = CGRectMake(0, 0, CGRectGetWidth(viewBounds), 44.0);
+  
   self.tokenField = [[COTokenField alloc] initWithFrame:tokenFieldFrame];
   self.tokenField.tokenFieldDelegate = self;
   self.tokenField.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
+  [self.tokenField addObserver:self forKeyPath:kTokenFieldFrameKeyPath options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
   
   // Configure search table
   self.searchTableView = [[UITableView alloc] initWithFrame:CGRectMake(0,
@@ -157,23 +164,52 @@
   self.searchTableView.hidden = YES;
   self.searchTableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
   
+  // Create the scroll view
+  self.tokenFieldScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(viewBounds), self.tokenField.computedRowHeight)];
+  
   [self.view addSubview:self.searchTableView];
-  [self.view addSubview:self.tokenField];
+  [self.view addSubview:self.tokenFieldScrollView];
+  [self.tokenFieldScrollView addSubview:self.tokenField];
   
   // Subscribe to keyboard notifications
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
 }
 
+- (void)layoutTokenFieldAndSearchTable {
+  CGRect bounds = self.view.bounds;
+  CGRect tokenFieldBounds = self.tokenField.bounds;
+  
+  self.tokenFieldScrollView.contentSize = tokenFieldBounds.size;
+  
+  if (CGRectGetHeight(tokenFieldBounds) < 100) {
+    tokenFieldBounds = CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), CGRectGetHeight(tokenFieldBounds));
+    self.tokenFieldScrollView.frame = tokenFieldBounds;
+  }
+  if (!CGRectIsNull(keyboardFrame_)) {
+    CGRect keyboardFrame = [self.view convertRect:keyboardFrame_ fromView:nil];
+    CGRect tableFrame = CGRectMake(0,
+                                   CGRectGetMaxY(self.tokenFieldScrollView.frame),
+                                   CGRectGetWidth(bounds),
+                                   CGRectGetMinY(keyboardFrame) - CGRectGetMaxY(self.tokenFieldScrollView.frame));
+    self.searchTableView.frame = tableFrame;
+  }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+  if ([keyPath isEqualToString:kTokenFieldFrameKeyPath]) {
+    [self layoutTokenFieldAndSearchTable];
+  }
+}
+
 - (void)viewDidUnload {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self.tokenField removeObserver:self forKeyPath:kTokenFieldFrameKeyPath];
 }
 
 - (void)keyboardDidShow:(NSNotification *)note {
-  CGRect keyboardFrame = [[[note userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-  CGPoint keyboardOriginInView = [self.view convertPoint:keyboardFrame.origin fromView:nil];
-  CGFloat tableOriginY = CGRectGetMaxY(self.tokenField.frame);  
-  self.searchTableView.frame = CGRectMake(0, tableOriginY, CGRectGetWidth(self.view.bounds), keyboardOriginInView.y - tableOriginY);
+  keyboardFrame_ = [[[note userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+  [self layoutTokenFieldAndSearchTable];
 }
 
 #pragma mark - COTokenFieldDelegate 
@@ -205,6 +241,16 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   
   // Split the search results into one email value per row
   NSMutableArray *results = [NSMutableArray new];
+#ifdef TARGET_IPHONE_SIMULATOR
+  for (int i=0; i<4; i++) {
+    NSDictionary *entry = [NSDictionary dictionaryWithObjectsAndKeys:
+                           [NSString stringWithFormat:@"Name %i", i], kCORecordFullName,
+                           [NSString stringWithFormat:@"label%i", i], kCORecordEmailLabel,
+                           [NSString stringWithFormat:@"fake%i@address.com", i], kCORecordEmailAddress,
+                           nil];
+    [results addObject:entry];
+  }
+#else
   for (CORecord *record in records) {
     for (CORecordEmail *email in record.emailAddresses) {
       NSDictionary *entry = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -217,6 +263,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
       }
     }
   }
+#endif
   self.discreteSearchResults = [NSArray arrayWithArray:results];
   
   // Update the table
