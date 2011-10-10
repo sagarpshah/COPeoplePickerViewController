@@ -55,7 +55,7 @@
 #define kTokenFieldTokenHeight (kTokenFieldFontSize + 4.0)
 #define kTokenFieldMaxTokenWidth 260.0
 #define kTokenFieldFrameKeyPath @"frame"
-#define kTokenFieldShadowHeight 18.0
+#define kTokenFieldShadowHeight 14.0
 
 @interface COTokenField : UIView <UITextFieldDelegate>
 @property (nonatomic, weak) id<COTokenFieldDelegate> tokenFieldDelegate;
@@ -180,10 +180,10 @@
   self.shadowLayer = [CAGradientLayer layer];
   self.shadowLayer.frame = CGRectMake(0, CGRectGetMaxY(self.tokenFieldScrollView.frame), CGRectGetWidth(self.view.bounds), kTokenFieldShadowHeight);
   self.shadowLayer.colors = [NSArray arrayWithObjects:
-                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:1.0].CGColor,
-                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:1.0].CGColor,
-                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:0.5].CGColor,
-                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:0.0].CGColor, nil];
+                             (__bridge id)[UIColor colorWithWhite:0.0 alpha:0.3].CGColor,
+                             (__bridge id)[UIColor colorWithWhite:0.0 alpha:0.3].CGColor,
+                             (__bridge id)[UIColor colorWithWhite:0.0 alpha:0.1].CGColor,
+                             (__bridge id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor, nil];
   self.shadowLayer.locations = [NSArray arrayWithObjects:
                                 [NSNumber numberWithDouble:0.0],
                                 [NSNumber numberWithDouble:1.0/kTokenFieldShadowHeight],
