@@ -241,7 +241,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   
   // Split the search results into one email value per row
   NSMutableArray *results = [NSMutableArray new];
-#ifdef TARGET_IPHONE_SIMULATOR
+#if TARGET_IPHONE_SIMULATOR
   for (int i=0; i<4; i++) {
     NSDictionary *entry = [NSDictionary dictionaryWithObjectsAndKeys:
                            [NSString stringWithFormat:@"Name %i", i], kCORecordFullName,
