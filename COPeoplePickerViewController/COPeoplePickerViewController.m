@@ -340,6 +340,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   COEmailTableCell *cell = [tableView dequeueReusableCellWithIdentifier:ridf];
   if (cell == nil) {
     cell = [[COEmailTableCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:ridf];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
   }
   cell.nameLabel.text = [result objectForKey:kCORecordFullName];
   cell.emailLabelLabel.text = [result objectForKey:kCORecordEmailLabel];
