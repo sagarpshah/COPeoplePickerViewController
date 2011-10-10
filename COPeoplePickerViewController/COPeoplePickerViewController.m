@@ -55,7 +55,7 @@
 #define kTokenFieldMaxTokenWidth 260.0
 
 @interface COTokenField : UIView <UITextFieldDelegate>
-@property (nonatomic, weak) id<COTokenFieldDelegate> delegate;
+@property (nonatomic, weak) id<COTokenFieldDelegate> tokenFieldDelegate;
 @property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) UIButton *addContactButton;
 @property (nonatomic, strong) NSMutableArray *tokens;
@@ -141,10 +141,8 @@
   CGRect viewBounds = self.view.bounds;
   CGRect tokenFieldFrame = CGRectMake(0, 0, CGRectGetWidth(viewBounds), 44.0);
   self.tokenField = [[COTokenField alloc] initWithFrame:tokenFieldFrame];
-  self.tokenField.delegate = self;
+  self.tokenField.tokenFieldDelegate = self;
   self.tokenField.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
-  
-  [self.view addSubview:self.tokenField];
   
   // Configure search table
   self.searchTableView = [[UITableView alloc] initWithFrame:CGRectMake(0,
@@ -160,6 +158,7 @@
   self.searchTableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
   
   [self.view addSubview:self.searchTableView];
+  [self.view addSubview:self.tokenField];
   
   // Subscribe to keyboard notifications
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
@@ -286,7 +285,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
 #pragma mark - COTokenField Implementation
 
 @implementation COTokenField
-@synthesize delegate = delegate_;
+@synthesize tokenFieldDelegate = tokenFieldDelegate_;
 @synthesize textField = textField_;
 @synthesize addContactButton = addContactButton_;
 @synthesize tokens = tokens_;
@@ -347,7 +346,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
 }
 
 - (void)addContact:(id)sender {
-  [self.delegate tokenFieldDidPressAddContactButton:self];
+  [self.tokenFieldDelegate tokenFieldDidPressAddContactButton:self];
 }
 
 - (CGFloat)computedRowHeight {
@@ -398,6 +397,7 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   CGRect tokenFieldFrame = self.frame;
   CGFloat minHeight = MAX(rowHeight, CGRectGetHeight(self.addContactButton.frame) + kTokenFieldPaddingY * 2.0);
   tokenFieldFrame.size.height = MAX(minHeight, CGRectGetMaxY(textFieldFrame) + kTokenFieldPaddingY);
+  
   self.frame = tokenFieldFrame;
   
   [self setNeedsDisplay];
@@ -475,7 +475,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
     static NSDate *lastUpdated = nil;;
     static NSMutableArray *records = nil;
     if (records == nil || [lastUpdated timeIntervalSinceDate:[NSDate date]] < -10) {
-      ABAddressBookRef ab = [self.delegate addressBookForTokenField:self];
+      ABAddressBookRef ab = [self.tokenFieldDelegate addressBookForTokenField:self];
       NSArray *people = CFBridgingRelease(ABAddressBookCopyArrayOfAllPeople(ab));
       records = [NSMutableArray new];
       for (id obj in people) {
@@ -503,7 +503,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
     // Generate results to pass to the delegate
     matchedRecords = [records objectsAtIndexes:resultSet];
   }
-  [self.delegate tokenField:self updateAddressBookSearchResults:matchedRecords];
+  [self.tokenFieldDelegate tokenField:self updateAddressBookSearchResults:matchedRecords];
 }
 
 #pragma mark - UITextFieldDelegate
