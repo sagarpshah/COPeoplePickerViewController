@@ -14,6 +14,7 @@
 		DC3CFB521440C73200B11E92 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3CFB511440C73200B11E92 /* main.m */; };
 		DC3CFB561440C73200B11E92 /* COAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3CFB551440C73200B11E92 /* COAppDelegate.m */; };
 		DC3CFB5E1440C78100B11E92 /* COPeoplePickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3CFB5D1440C78100B11E92 /* COPeoplePickerViewController.m */; };
+		DC9BF9F11443247400494229 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC9BF9F01443247400494229 /* QuartzCore.framework */; };
 		DCC16A731441E25400E5C724 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC16A711441E25400E5C724 /* AddressBook.framework */; };
 		DCC16A741441E25400E5C724 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC16A721441E25400E5C724 /* AddressBookUI.framework */; };
 /* End PBXBuildFile section */
@@ -31,6 +32,7 @@
 		DC3CFB551440C73200B11E92 /* COAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = COAppDelegate.m; sourceTree = "<group>"; };
 		DC3CFB5C1440C78100B11E92 /* COPeoplePickerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = COPeoplePickerViewController.h; sourceTree = "<group>"; };
 		DC3CFB5D1440C78100B11E92 /* COPeoplePickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = COPeoplePickerViewController.m; sourceTree = "<group>"; };
+		DC9BF9F01443247400494229 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		DCC16A711441E25400E5C724 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		DCC16A721441E25400E5C724 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -40,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC9BF9F11443247400494229 /* QuartzCore.framework in Frameworks */,
 				DCC16A731441E25400E5C724 /* AddressBook.framework in Frameworks */,
 				DCC16A741441E25400E5C724 /* AddressBookUI.framework in Frameworks */,
 				DC3CFB461440C73200B11E92 /* UIKit.framework in Frameworks */,
@@ -71,6 +74,7 @@
 		DC3CFB441440C73200B11E92 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DC9BF9F01443247400494229 /* QuartzCore.framework */,
 				DC3CFB451440C73200B11E92 /* UIKit.framework */,
 				DC3CFB471440C73200B11E92 /* Foundation.framework */,
 				DC3CFB491440C73200B11E92 /* CoreGraphics.framework */,

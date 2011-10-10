@@ -8,6 +8,7 @@
 
 #import "COPeoplePickerViewController.h"
 
+#import <QuartzCore/QuartzCore.h>
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
 #import <objc/runtime.h>
@@ -54,6 +55,7 @@
 #define kTokenFieldTokenHeight (kTokenFieldFontSize + 4.0)
 #define kTokenFieldMaxTokenWidth 260.0
 #define kTokenFieldFrameKeyPath @"frame"
+#define kTokenFieldShadowHeight 18.0
 
 @interface COTokenField : UIView <UITextFieldDelegate>
 @property (nonatomic, weak) id<COTokenFieldDelegate> tokenFieldDelegate;
@@ -107,6 +109,7 @@
 @property (nonatomic, strong) UIScrollView *tokenFieldScrollView;
 @property (nonatomic, strong) UITableView *searchTableView;
 @property (nonatomic, strong) NSArray *discreteSearchResults;
+@property (nonatomic, strong) CAGradientLayer *shadowLayer;
 @end
 
 @implementation COPeoplePickerViewController
@@ -115,6 +118,7 @@
 @synthesize searchTableView = searchTableView_;
 @synthesize displayedProperties = displayedProperties_;
 @synthesize discreteSearchResults = discreteSearchResults_;
+@synthesize shadowLayer = shadowLayer_;
 
 - (id)init {
   self = [super init];
@@ -172,6 +176,22 @@
   [self.view addSubview:self.tokenFieldScrollView];
   [self.tokenFieldScrollView addSubview:self.tokenField];
   
+  // Shadow layer
+  self.shadowLayer = [CAGradientLayer layer];
+  self.shadowLayer.frame = CGRectMake(0, CGRectGetMaxY(self.tokenFieldScrollView.frame), CGRectGetWidth(self.view.bounds), kTokenFieldShadowHeight);
+  self.shadowLayer.colors = [NSArray arrayWithObjects:
+                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:1.0].CGColor,
+                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:1.0].CGColor,
+                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:0.5].CGColor,
+                             (__bridge id)[UIColor colorWithWhite:0.6 alpha:0.0].CGColor, nil];
+  self.shadowLayer.locations = [NSArray arrayWithObjects:
+                                [NSNumber numberWithDouble:0.0],
+                                [NSNumber numberWithDouble:1.0/kTokenFieldShadowHeight],
+                                [NSNumber numberWithDouble:1.0/kTokenFieldShadowHeight],
+                                [NSNumber numberWithDouble:1.0], nil];
+  
+  [self.view.layer addSublayer:self.shadowLayer];
+  
   // Subscribe to keyboard notifications
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
@@ -195,6 +215,9 @@
                                    CGRectGetMinY(keyboardFrame) - CGRectGetMaxY(self.tokenFieldScrollView.frame));
     self.searchTableView.frame = tableFrame;
   }
+  
+  self.shadowLayer.frame = CGRectMake(0, CGRectGetMaxY(self.tokenFieldScrollView.frame), CGRectGetWidth(self.view.bounds), kTokenFieldShadowHeight);
+  
   CGFloat contentOffset = MAX(0, CGRectGetHeight(tokenFieldBounds) - CGRectGetHeight(self.tokenFieldScrollView.bounds));
   [self.tokenFieldScrollView setContentOffset:CGPointMake(0, contentOffset) animated:YES];
 }
@@ -385,14 +408,6 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
     [self setNeedsLayout];
   }
   return self;
-}
-
-- (void)drawRect:(CGRect)rect {
-  CGContextRef ctx = UIGraphicsGetCurrentContext();
-  CGContextMoveToPoint(ctx, 0, CGRectGetHeight(self.bounds) - 0.5);
-  CGContextAddLineToPoint(ctx, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) - 0.5);
-  CGContextSetStrokeColorWithColor(ctx, [UIColor colorWithWhite:0.0 alpha:0.25].CGColor);
-  CGContextStrokePath(ctx);
 }
 
 - (void)addContact:(id)sender {
