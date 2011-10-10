@@ -10,6 +10,7 @@
 
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
+#import <objc/runtime.h>
 
 
 #pragma mark - COToken
@@ -23,6 +24,14 @@
 
 + (COToken *)tokenWithTitle:(NSString *)title associatedObject:(id)obj container:(COTokenField *)container;
 
+@end
+
+#pragma mark - COEmailTableCell
+
+@interface COEmailTableCell : UITableViewCell
+@property (nonatomic, strong) UILabel *nameLabel;
+@property (nonatomic, strong) UILabel *emailLabelLabel;
+@property (nonatomic, strong) UILabel *emailAddressLabel;
 @end
 
 #pragma mark - COTokenField Interface & Delegate Protocol
@@ -91,12 +100,14 @@
 }
 @property (nonatomic, strong) COTokenField *tokenField;
 @property (nonatomic, strong) UITableView *searchTableView;
+@property (nonatomic, strong) NSArray *discreteSearchResults;
 @end
 
 @implementation COPeoplePickerViewController
 @synthesize tokenField = tokenField_;
 @synthesize searchTableView = searchTableView_;
 @synthesize displayedProperties = displayedProperties_;
+@synthesize discreteSearchResults = discreteSearchResults_;
 
 - (id)init {
   self = [super init];
@@ -177,16 +188,39 @@
   return addressBook_;
 }
 
+static NSString *kCORecordFullName = @"fullName";
+static NSString *kCORecordEmailLabel = @"emailLabel";
+static NSString *kCORecordEmailAddress = @"emailAddress";
+
 - (void)tokenField:(COTokenField *)tokenField updateAddressBookSearchResults:(NSArray *)records {
-  NSLog(@"matches:");
+//  NSLog(@"matches:");
+//  for (CORecord *record in records) {
+//    NSLog(@"\t%@:", record.fullName);
+//    for (CORecordEmail *email in record.emailAddresses) {
+//      NSLog(@"\t\t-> %@: %@", email.label, email.address);
+//    }
+//  }
+  
+  // Split the search results into one email value per row
+  NSMutableArray *results = [NSMutableArray new];
   for (CORecord *record in records) {
-    NSLog(@"\t%@:", record.fullName);
     for (CORecordEmail *email in record.emailAddresses) {
-      NSLog(@"\t\t-> %@: %@", email.label, email.address);
+      NSDictionary *entry = [NSDictionary dictionaryWithObjectsAndKeys:
+                             record.fullName, kCORecordFullName,
+                             email.label, kCORecordEmailLabel,
+                             email.address, kCORecordEmailAddress,
+                             nil];
+      if (![results containsObject:entry]) {
+        [results addObject:entry];
+      }
     }
   }
+  self.discreteSearchResults = [NSArray arrayWithArray:results];
+  
+  // Update the table
   if (records.count > 0) {
     self.searchTableView.hidden = NO;
+    [self.searchTableView reloadData];
   }
   else {
     self.searchTableView.hidden = YES;
@@ -217,11 +251,22 @@
 #pragma mark - UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-  return 0;
+  return self.discreteSearchResults.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-  return nil;
+  NSDictionary *result = [self.discreteSearchResults objectAtIndex:indexPath.row];
+  
+  static NSString *ridf = @"resultCell";
+  COEmailTableCell *cell = [tableView dequeueReusableCellWithIdentifier:ridf];
+  if (cell == nil) {
+    cell = [[COEmailTableCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:ridf];
+  }
+  cell.nameLabel.text = [result objectForKey:kCORecordFullName];
+  cell.emailLabelLabel.text = [result objectForKey:kCORecordEmailLabel];
+  cell.emailAddressLabel.text = [result objectForKey:kCORecordEmailAddress];
+  
+  return cell;
 }
 
 #pragma mark - UITableViewDelegate
@@ -638,6 +683,47 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 
 - (NSString *)address {
   return CFBridgingRelease(ABMultiValueCopyValueAtIndex(emails_, ABMultiValueGetIndexForIdentifier(emails_, identifier_)));
+}
+
+@end
+
+#pragma mark - COEmailTableCell
+
+@implementation COEmailTableCell
+@synthesize nameLabel = nameLabel_;
+@synthesize emailLabelLabel = emailLabelLabel_;
+@synthesize emailAddressLabel = emailAddressLabel_;
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+  if (self) {
+    CGFloat leftInset = 8;
+    CGFloat yInset = 4;
+    CGFloat labelWidth = 40;
+    
+    CGRect topHalf = CGRectMake(leftInset, yInset, CGRectGetWidth(self.bounds) - leftInset * 2, CGRectGetHeight(self.bounds) / 2.0 - yInset);
+    CGRect labelFrame = CGRectMake(leftInset, CGRectGetMaxY(topHalf), labelWidth, CGRectGetHeight(self.bounds) / 2.0 - yInset);
+    CGRect addressFrame = CGRectMake(labelWidth + leftInset * 2, CGRectGetMaxY(topHalf), CGRectGetWidth(self.bounds) - labelWidth - leftInset * 3, CGRectGetHeight(self.bounds) / 2.0 - yInset);
+    
+    self.nameLabel = [[UILabel alloc] initWithFrame:topHalf];
+    self.nameLabel.font = [UIFont boldSystemFontOfSize:16];
+    self.nameLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    
+    self.emailLabelLabel = [[UILabel alloc] initWithFrame:labelFrame];
+    self.emailLabelLabel.font = [UIFont boldSystemFontOfSize:14];
+    self.emailLabelLabel.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
+    self.emailLabelLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleHeight;
+    
+    self.emailAddressLabel = [[UILabel alloc] initWithFrame:addressFrame];
+    self.emailAddressLabel.font = [UIFont systemFontOfSize:14];
+    self.emailAddressLabel.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
+    self.emailAddressLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    
+    [self addSubview:self.nameLabel];
+    [self addSubview:self.emailLabelLabel];
+    [self addSubview:self.emailAddressLabel];
+  }
+  return self;
 }
 
 @end
