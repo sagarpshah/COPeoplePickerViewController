@@ -276,7 +276,10 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
 
 #pragma mark - UITableViewDelegate
 
-// TODO: implement
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+  COEmailTableCell *cell = (id)[tableView cellForRowAtIndexPath:indexPath];
+  [self.tokenField processToken:cell.emailAddressLabel.text];
+}
 
 @end
 
