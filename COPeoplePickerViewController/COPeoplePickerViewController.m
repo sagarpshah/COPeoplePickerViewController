@@ -297,9 +297,9 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   self.discreteSearchResults = [NSArray arrayWithArray:results];
   
   // Update the table
-  if (results.count > 0) {
-    self.searchTableView.hidden = NO;
-    [self.searchTableView reloadData];
+  [self.searchTableView reloadData];
+  if (self.discreteSearchResults.count > 0) {
+    self.searchTableView.hidden = NO;  
   }
   else {
     self.searchTableView.hidden = YES;
@@ -425,9 +425,9 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
 }
 
 - (void)layoutSubviews {
-  for (COToken *token in self.tokens) {
-    [token removeFromSuperview];
-  }
+//  for (COToken *token in self.tokens) {
+//    [token removeFromSuperview];
+//  }
   NSUInteger row = 0;
   NSInteger tokenCount = self.tokens.count;
   
@@ -469,8 +469,6 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   tokenFieldFrame.size.height = MAX(minHeight, CGRectGetMaxY(textFieldFrame) + kTokenFieldPaddingY);
   
   self.frame = tokenFieldFrame;
-  
-  [self setNeedsDisplay];
 }
 
 - (void)selectToken:(COToken *)token {
