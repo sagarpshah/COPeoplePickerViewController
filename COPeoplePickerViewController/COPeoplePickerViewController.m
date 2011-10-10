@@ -66,6 +66,7 @@
 @property (nonatomic, readonly) CGFloat computedRowHeight;
 @property (nonatomic, readonly) NSString *textWithoutDetector;
 
+- (CGFloat)heightForNumberOfRows:(NSUInteger)rows;
 - (void)selectToken:(COToken *)token;
 - (void)modifyToken:(COToken *)token;
 - (void)modifySelectedToken;
@@ -200,27 +201,33 @@
 - (void)layoutTokenFieldAndSearchTable {
   CGRect bounds = self.view.bounds;
   CGRect tokenFieldBounds = self.tokenField.bounds;
+  CGRect tokenScrollBounds = tokenFieldBounds;
   
   self.tokenFieldScrollView.contentSize = tokenFieldBounds.size;
   
-  if (CGRectGetHeight(tokenFieldBounds) < 100) {
-    tokenFieldBounds = CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), CGRectGetHeight(tokenFieldBounds));
-    self.tokenFieldScrollView.frame = tokenFieldBounds;
+  CGFloat maxHeight = [self.tokenField heightForNumberOfRows:5];
+  if (!self.searchTableView.hidden) {
+    tokenScrollBounds = CGRectMake(0, 0, CGRectGetWidth(bounds), [self.tokenField heightForNumberOfRows:1]);
   }
+  else if (CGRectGetHeight(tokenScrollBounds) > maxHeight) {
+    tokenScrollBounds = CGRectMake(0, 0, CGRectGetWidth(bounds), maxHeight);  
+  }
+  [UIView animateWithDuration:0.25 animations:^{
+    self.tokenFieldScrollView.frame = tokenScrollBounds;
+  }];
+  
   if (!CGRectIsNull(keyboardFrame_)) {
     CGRect keyboardFrame = [self.view convertRect:keyboardFrame_ fromView:nil];
     CGRect tableFrame = CGRectMake(0,
                                    CGRectGetMaxY(self.tokenFieldScrollView.frame),
                                    CGRectGetWidth(bounds),
                                    CGRectGetMinY(keyboardFrame) - CGRectGetMaxY(self.tokenFieldScrollView.frame));
-    self.searchTableView.frame = tableFrame;
+    [UIView animateWithDuration:0.25 animations:^{
+      self.searchTableView.frame = tableFrame;
+    }];
   }
   
-  [CATransaction begin];
-  [CATransaction setDisableActions:YES];
-  [CATransaction setAnimationDuration:0];
-  self.shadowLayer.frame = CGRectMake(0, CGRectGetMaxY(self.tokenFieldScrollView.frame), CGRectGetWidth(self.view.bounds), kTokenFieldShadowHeight);
-  [CATransaction commit];
+  self.shadowLayer.frame = CGRectMake(0, CGRectGetMaxY(self.tokenFieldScrollView.frame), CGRectGetWidth(bounds), kTokenFieldShadowHeight);
   
   CGFloat contentOffset = MAX(0, CGRectGetHeight(tokenFieldBounds) - CGRectGetHeight(self.tokenFieldScrollView.bounds));
   [self.tokenFieldScrollView setContentOffset:CGPointMake(0, contentOffset) animated:YES];
@@ -304,6 +311,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   else {
     self.searchTableView.hidden = YES;
   }
+  [self layoutTokenFieldAndSearchTable];
 }
 
 #pragma mark - ABPeoplePickerNavigationControllerDelegate
@@ -424,10 +432,11 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   return MAX(buttonHeight, (kTokenFieldPaddingY * 2.0 + kTokenFieldTokenHeight));
 }
 
+- (CGFloat)heightForNumberOfRows:(NSUInteger)rows {
+  return (CGFloat)rows * self.computedRowHeight + kTokenFieldPaddingY * 2.0;
+}
+
 - (void)layoutSubviews {
-//  for (COToken *token in self.tokens) {
-//    [token removeFromSuperview];
-//  }
   NSUInteger row = 0;
   NSInteger tokenCount = self.tokens.count;
   
