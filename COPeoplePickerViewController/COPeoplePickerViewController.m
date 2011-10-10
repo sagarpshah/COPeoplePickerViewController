@@ -221,7 +221,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   self.discreteSearchResults = [NSArray arrayWithArray:results];
   
   // Update the table
-  if (records.count > 0) {
+  if (results.count > 0) {
     self.searchTableView.hidden = NO;
     [self.searchTableView reloadData];
   }
