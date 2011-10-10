@@ -216,7 +216,11 @@
     self.searchTableView.frame = tableFrame;
   }
   
+  [CATransaction begin];
+  [CATransaction setDisableActions:YES];
+  [CATransaction setAnimationDuration:0];
   self.shadowLayer.frame = CGRectMake(0, CGRectGetMaxY(self.tokenFieldScrollView.frame), CGRectGetWidth(self.view.bounds), kTokenFieldShadowHeight);
+  [CATransaction commit];
   
   CGFloat contentOffset = MAX(0, CGRectGetHeight(tokenFieldBounds) - CGRectGetHeight(self.tokenFieldScrollView.bounds));
   [self.tokenFieldScrollView setContentOffset:CGPointMake(0, contentOffset) animated:YES];
