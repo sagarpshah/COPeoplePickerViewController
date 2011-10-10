@@ -32,6 +32,9 @@
 @property (nonatomic, strong) UILabel *nameLabel;
 @property (nonatomic, strong) UILabel *emailLabelLabel;
 @property (nonatomic, strong) UILabel *emailAddressLabel;
+
+- (void)adjustLabels;
+
 @end
 
 #pragma mark - COTokenField Interface & Delegate Protocol
@@ -265,6 +268,8 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   cell.nameLabel.text = [result objectForKey:kCORecordFullName];
   cell.emailLabelLabel.text = [result objectForKey:kCORecordEmailLabel];
   cell.emailAddressLabel.text = [result objectForKey:kCORecordEmailAddress];
+  
+  [cell adjustLabels];
   
   return cell;
 }
@@ -697,24 +702,16 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
   if (self) {
-    CGFloat leftInset = 8;
-    CGFloat yInset = 4;
-    CGFloat labelWidth = 40;
-    
-    CGRect topHalf = CGRectMake(leftInset, yInset, CGRectGetWidth(self.bounds) - leftInset * 2, CGRectGetHeight(self.bounds) / 2.0 - yInset);
-    CGRect labelFrame = CGRectMake(leftInset, CGRectGetMaxY(topHalf), labelWidth, CGRectGetHeight(self.bounds) / 2.0 - yInset);
-    CGRect addressFrame = CGRectMake(labelWidth + leftInset * 2, CGRectGetMaxY(topHalf), CGRectGetWidth(self.bounds) - labelWidth - leftInset * 3, CGRectGetHeight(self.bounds) / 2.0 - yInset);
-    
-    self.nameLabel = [[UILabel alloc] initWithFrame:topHalf];
+    self.nameLabel = [[UILabel alloc] initWithFrame:self.bounds];
     self.nameLabel.font = [UIFont boldSystemFontOfSize:16];
     self.nameLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    self.emailLabelLabel = [[UILabel alloc] initWithFrame:labelFrame];
+    self.emailLabelLabel = [[UILabel alloc] initWithFrame:self.bounds];
     self.emailLabelLabel.font = [UIFont boldSystemFontOfSize:14];
     self.emailLabelLabel.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
     self.emailLabelLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleHeight;
     
-    self.emailAddressLabel = [[UILabel alloc] initWithFrame:addressFrame];
+    self.emailAddressLabel = [[UILabel alloc] initWithFrame:self.bounds];
     self.emailAddressLabel.font = [UIFont systemFontOfSize:14];
     self.emailAddressLabel.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
     self.emailAddressLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -722,8 +719,20 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
     [self addSubview:self.nameLabel];
     [self addSubview:self.emailLabelLabel];
     [self addSubview:self.emailAddressLabel];
+    
+    [self adjustLabels];
   }
   return self;
+}
+
+- (void)adjustLabels {
+  CGSize emailLabelSize = [self.emailLabelLabel.text sizeWithFont:self.emailLabelLabel.font];
+  CGFloat leftInset = 8;
+  CGFloat yInset = 4;
+  CGFloat labelWidth = emailLabelSize.width;
+  self.nameLabel.frame = CGRectMake(leftInset, yInset, CGRectGetWidth(self.bounds) - leftInset * 2, CGRectGetHeight(self.bounds) / 2.0 - yInset);
+  self.emailLabelLabel.frame = CGRectMake(leftInset, CGRectGetMaxY(self.nameLabel.frame), labelWidth, CGRectGetHeight(self.bounds) / 2.0 - yInset);
+  self.emailAddressLabel.frame = CGRectMake(labelWidth + leftInset * 2, CGRectGetMaxY(self.nameLabel.frame), CGRectGetWidth(self.bounds) - labelWidth - leftInset * 3, CGRectGetHeight(self.bounds) / 2.0 - yInset);
 }
 
 @end
