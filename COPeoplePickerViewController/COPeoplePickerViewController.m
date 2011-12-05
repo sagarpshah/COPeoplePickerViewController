@@ -129,7 +129,7 @@
     // If we don't create the address book here and try to set |displayedProperties| first
     // all ABPropertyIDs will default to '0'.
     //
-    // TODO: file RDAR
+    // Filed rdar://10526251
     //
     addressBook_ = ABAddressBookCreate();
   }
