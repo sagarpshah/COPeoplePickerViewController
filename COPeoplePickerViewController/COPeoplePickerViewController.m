@@ -761,9 +761,12 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 
 - (NSString *)label {
   CFStringRef label = ABMultiValueCopyLabelAtIndex(emails_, ABMultiValueGetIndexForIdentifier(emails_, identifier_));
-  CFStringRef localizedLabel = ABAddressBookCopyLocalizedLabel(label);
-  CFRelease(label);
-  return CFBridgingRelease(localizedLabel);
+  if (label != NULL) {
+    CFStringRef localizedLabel = ABAddressBookCopyLocalizedLabel(label);
+    CFRelease(label);
+    return CFBridgingRelease(localizedLabel);
+  }
+  return @"email";
 }
 
 - (NSString *)address {
