@@ -11,8 +11,6 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
-@class COTokenField;
-
 @interface CORecord ()
 @property (nonatomic, copy, readwrite) NSString *title;
 @property (nonatomic, strong, readwrite) COPerson *person;
@@ -30,6 +28,8 @@
 @end
 
 #pragma mark - COToken
+
+@class COTokenField;
 
 @interface COToken : UIButton
 @property (nonatomic, copy) NSString *title;
