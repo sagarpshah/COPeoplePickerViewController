@@ -9,14 +9,27 @@
 #import "COPeoplePickerViewController.h"
 
 #import <QuartzCore/QuartzCore.h>
-#import <AddressBook/AddressBook.h>
-#import <AddressBookUI/AddressBookUI.h>
 #import <objc/runtime.h>
 
+@class COTokenField;
+
+@interface CORecord ()
+@property (nonatomic, copy, readwrite) NSString *title;
+@property (nonatomic, strong, readwrite) COPerson *person;
+@end
+
+@implementation CORecord
+@synthesize title = title_;
+@synthesize person = person_;
+
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<%@ title: '%@'; person: '%@'>",
+          NSStringFromClass(isa), self.title, self.person];
+}
+
+@end
 
 #pragma mark - COToken
-
-@class COTokenField;
 
 @interface COToken : UIButton
 @property (nonatomic, copy) NSString *title;
@@ -33,6 +46,7 @@
 @property (nonatomic, strong) UILabel *nameLabel;
 @property (nonatomic, strong) UILabel *emailLabelLabel;
 @property (nonatomic, strong) UILabel *emailAddressLabel;
+@property (nonatomic, strong) COPerson *associatedRecord;
 
 - (void)adjustLabels;
 
@@ -70,24 +84,17 @@
 - (void)selectToken:(COToken *)token;
 - (void)modifyToken:(COToken *)token;
 - (void)modifySelectedToken;
-- (void)processToken:(NSString *)tokenText;
+- (void)processToken:(NSString *)tokenText associatedRecord:(COPerson *)record;
 - (void)tokenInputChanged:(id)sender;
 
 @end
 
 #pragma mark - Data Structures
 
-@interface CORecord : NSObject {
+@interface COPerson () {
 @package
   ABRecordRef record_;
 }
-@property (nonatomic, readonly) NSString *fullName;
-@property (nonatomic, readonly) NSString *namePrefix;
-@property (nonatomic, readonly) NSString *firstName;
-@property (nonatomic, readonly) NSString *middleName;
-@property (nonatomic, readonly) NSString *lastName;
-@property (nonatomic, readonly) NSString *nameSuffix;
-@property (nonatomic, readonly) NSArray *emailAddresses;
 @end
 
 @interface CORecordEmail : NSObject {
@@ -114,6 +121,7 @@
 @end
 
 @implementation COPeoplePickerViewController
+@synthesize delegate = delegate_;
 @synthesize tokenField = tokenField_;
 @synthesize tokenFieldScrollView = tokenFieldScrollView_;
 @synthesize searchTableView = searchTableView_;
@@ -141,6 +149,21 @@
     CFRelease(addressBook_);
     addressBook_ = NULL;
   }
+}
+
+- (void)done:(id)sender {
+  if ([self.delegate respondsToSelector:@selector(peoplePickerViewControllerDidFinishPicking:)]) {
+    [self.delegate peoplePickerViewControllerDidFinishPicking:self];
+  }
+}
+
+- (void)loadView {
+  [super loadView];
+  UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil)
+                                                                style:UIBarButtonItemStyleDone
+                                                               target:self
+                                                               action:@selector(done:)];
+  self.navigationItem.rightBarButtonItem = rightItem;
 }
 
 - (void)viewDidLoad {  
@@ -198,6 +221,10 @@
   [nc addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+  [self.tokenField.textField becomeFirstResponder];
+}
+
 - (void)layoutTokenFieldAndSearchTable {
   CGRect bounds = self.view.bounds;
   CGRect tokenFieldBounds = self.tokenField.bounds;
@@ -231,6 +258,8 @@
   
   CGFloat contentOffset = MAX(0, CGRectGetHeight(tokenFieldBounds) - CGRectGetHeight(self.tokenFieldScrollView.bounds));
   [self.tokenFieldScrollView setContentOffset:CGPointMake(0, contentOffset) animated:YES];
+  
+  //NSLog(@"selectedRecors: %@", self.selectedRecords);
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -244,6 +273,17 @@
   [self.tokenField removeObserver:self forKeyPath:kTokenFieldFrameKeyPath];
 }
 
+- (NSArray *)selectedRecords {
+  NSMutableArray *map = [NSMutableArray new];
+  for (COToken *token in self.tokenField.tokens) {
+    CORecord *record = [CORecord new];
+    record.title = token.title;
+    record.person = token.associatedObject;
+    [map addObject:record];
+  }
+  return [NSArray arrayWithArray:map];
+}
+
 - (void)keyboardDidShow:(NSNotification *)note {
   keyboardFrame_ = [[[note userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
   [self layoutTokenFieldAndSearchTable];
@@ -255,7 +295,14 @@
   ABPeoplePickerNavigationController *picker = [ABPeoplePickerNavigationController new];
   picker.addressBook = addressBook_;
   picker.peoplePickerDelegate = self;
-  picker.displayedProperties = self.displayedProperties;  
+  picker.displayedProperties = self.displayedProperties;
+  
+  // Set same tint color on picker navigation bar
+  UIColor *tintColor = self.navigationController.navigationBar.tintColor;
+  if (tintColor != nil) {
+    picker.navigationBar.tintColor = tintColor;
+  }
+  
   [self presentModalViewController:picker animated:YES];
 }
 
@@ -266,6 +313,7 @@
 static NSString *kCORecordFullName = @"fullName";
 static NSString *kCORecordEmailLabel = @"emailLabel";
 static NSString *kCORecordEmailAddress = @"emailAddress";
+static NSString *kCORecordRef = @"record";
 
 - (void)tokenField:(COTokenField *)tokenField updateAddressBookSearchResults:(NSArray *)records {
 //  NSLog(@"matches:");
@@ -288,12 +336,13 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
     [results addObject:entry];
   }
 #else
-  for (CORecord *record in records) {
+  for (COPerson *record in records) {
     for (CORecordEmail *email in record.emailAddresses) {
       NSDictionary *entry = [NSDictionary dictionaryWithObjectsAndKeys:
                              [record.fullName length] != 0 ? record.fullName : email.address, kCORecordFullName,
                              email.label, kCORecordEmailLabel,
                              email.address, kCORecordEmailAddress,
+                             record, kCORecordRef,
                              nil];
       if (![results containsObject:entry]) {
         [results addObject:entry];
@@ -325,7 +374,10 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   NSString *email = CFBridgingRelease(ABMultiValueCopyValueAtIndex(multi, identifier));
   CFRelease(multi);
   
-  [self.tokenField processToken:email];
+  COPerson *record = [COPerson new];
+  record->record_ = CFRetain(person);
+  
+  [self.tokenField processToken:email associatedRecord:record];
   [self dismissModalViewControllerAnimated:YES];
   
   return NO;
@@ -353,6 +405,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
   cell.nameLabel.text = [result objectForKey:kCORecordFullName];
   cell.emailLabelLabel.text = [result objectForKey:kCORecordEmailLabel];
   cell.emailAddressLabel.text = [result objectForKey:kCORecordEmailAddress];
+  cell.associatedRecord = [result objectForKey:kCORecordRef];
   
   [cell adjustLabels];
   
@@ -363,7 +416,7 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
   COEmailTableCell *cell = (id)[tableView cellForRowAtIndexPath:indexPath];
-  [self.tokenField processToken:cell.emailAddressLabel.text];
+  [self.tokenField processToken:cell.emailAddressLabel.text associatedRecord:cell.associatedRecord];
 }
 
 @end
@@ -520,8 +573,8 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   [self modifyToken:token];
 }
 
-- (void)processToken:(NSString *)tokenText {
-  COToken *token = [COToken tokenWithTitle:tokenText associatedObject:tokenText container:self];
+- (void)processToken:(NSString *)tokenText associatedRecord:(COPerson *)record {
+  COToken *token = [COToken tokenWithTitle:tokenText associatedObject:record container:self];
   [token addTarget:self action:@selector(selectToken:) forControlEvents:UIControlEventTouchUpInside];
   [self.tokens addObject:token];
   self.textField.text = kCOTokenFieldDetectorString;
@@ -557,7 +610,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
       records = [NSMutableArray new];
       for (id obj in people) {
         ABRecordRef recordRef = (__bridge CFTypeRef)obj;
-        CORecord *record = [CORecord new];
+        COPerson *record = [COPerson new];
         record->record_ = CFRetain(recordRef);
         [records addObject:record];
       }
@@ -565,7 +618,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
     }
     
     NSIndexSet *resultSet = [records indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-      CORecord *record = (CORecord *)obj;
+      COPerson *record = (COPerson *)obj;
       if ([record.fullName length] != 0 && containsString(record.fullName, searchText)) {
         return YES;
       }
@@ -602,7 +655,10 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
   }
   NSString *text = self.textField.text;
   if ([text length] > 1) {
-    [self processToken:[text substringFromIndex:1]];
+    [self processToken:[text substringFromIndex:1] associatedRecord:nil];
+  }
+  else {
+    return [textField resignFirstResponder];
   }
   return YES;
 }
@@ -697,11 +753,16 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
   [self.title drawInRect:titleFrame withFont:titleFont lineBreakMode:UILineBreakModeTailTruncation alignment:UITextAlignmentCenter];
 }
 
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<%@ title: '%@'; associatedObj: '%@'>",
+          NSStringFromClass(isa), self.title, self.associatedObject];
+}
+
 @end
 
-#pragma mark - CORecord
+#pragma mark - COPerson
 
-@implementation CORecord
+@implementation COPerson
 
 - (void)dealloc {
   if (record_) {
@@ -748,6 +809,10 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
   return [NSArray arrayWithArray:addresses];
 }
 
+- (ABRecordRef)record {
+  return record_;
+}
+
 @end
 
 @implementation CORecordEmail
@@ -781,6 +846,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 @synthesize nameLabel = nameLabel_;
 @synthesize emailLabelLabel = emailLabelLabel_;
 @synthesize emailAddressLabel = emailAddressLabel_;
+@synthesize associatedRecord = associatedRecord_;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
