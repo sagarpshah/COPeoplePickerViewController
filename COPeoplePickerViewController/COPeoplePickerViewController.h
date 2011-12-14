@@ -15,13 +15,21 @@
 @interface COPeoplePickerViewController : UIViewController
 @property (nonatomic, weak) id<COPeoplePickerViewControllerDelegate> delegate;
 
-// An array of ABPropertyID listing the properties that should be visible when viewing a person.
-// If you are interested in one particular type of data (for example a phone number), displayedProperties
-// should be an array with a single NSNumber instance (representing kABPersonPhoneProperty).
-// Note that name information will always be shown if available.
-//
-// DEVNOTE: currently only supports email (extend if you need more)
-//
+/*!
+ @property
+ @abstract Returns the address book used by the view controller
+ */
+@property (nonatomic, readonly) ABAddressBookRef addressBookRef;
+
+/*!
+ @property displayedProperties
+ @discussion An array of ABPropertyID listing the properties that should be visible when viewing a person.
+ If you are interested in one particular type of data (for example a phone number), displayedProperties
+ should be an array with a single NSNumber instance (representing kABPersonPhoneProperty).
+ Note that name information will always be shown if available.
+ 
+ DEVNOTE: currently only supports email (extend if you need more)
+*/
 @property (nonatomic, copy) NSArray *displayedProperties;
 
 /*!

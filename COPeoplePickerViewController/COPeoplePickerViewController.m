@@ -161,6 +161,10 @@ COSynth(shadowLayer)
   }
 }
 
+- (ABAddressBookRef)addressBookRef {
+  return addressBook_;
+}
+
 - (void)done:(id)sender {
   if ([self.delegate respondsToSelector:@selector(peoplePickerViewControllerDidFinishPicking:)]) {
     [self.delegate peoplePickerViewControllerDidFinishPicking:self];
