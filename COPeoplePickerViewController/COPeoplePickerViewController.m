@@ -11,14 +11,16 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
+#define COSynth(x) @synthesize x = x##_;
+
 @interface CORecord ()
 @property (nonatomic, copy, readwrite) NSString *title;
 @property (nonatomic, strong, readwrite) COPerson *person;
 @end
 
 @implementation CORecord
-@synthesize title = title_;
-@synthesize person = person_;
+COSynth(title)
+COSynth(person)
 
 - (NSString *)description {
   return [NSString stringWithFormat:@"<%@ title: '%@'; person: '%@'>",
@@ -121,13 +123,13 @@
 @end
 
 @implementation COPeoplePickerViewController
-@synthesize delegate = delegate_;
-@synthesize tokenField = tokenField_;
-@synthesize tokenFieldScrollView = tokenFieldScrollView_;
-@synthesize searchTableView = searchTableView_;
-@synthesize displayedProperties = displayedProperties_;
-@synthesize discreteSearchResults = discreteSearchResults_;
-@synthesize shadowLayer = shadowLayer_;
+COSynth(delegate)
+COSynth(tokenField)
+COSynth(tokenFieldScrollView)
+COSynth(searchTableView)
+COSynth(displayedProperties)
+COSynth(discreteSearchResults)
+COSynth(shadowLayer)
 
 - (id)init {
   self = [super init];
@@ -424,11 +426,11 @@ static NSString *kCORecordRef = @"record";
 #pragma mark - COTokenField Implementation
 
 @implementation COTokenField
-@synthesize tokenFieldDelegate = tokenFieldDelegate_;
-@synthesize textField = textField_;
-@synthesize addContactButton = addContactButton_;
-@synthesize tokens = tokens_;
-@synthesize selectedToken = selectedToken_;
+COSynth(tokenFieldDelegate)
+COSynth(textField)
+COSynth(addContactButton)
+COSynth(tokens)
+COSynth(selectedToken)
 
 static NSString *kCOTokenFieldDetectorString = @"\u200B";
 
@@ -668,9 +670,9 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 #pragma mark - COToken
 
 @implementation COToken
-@synthesize title = title_;
-@synthesize associatedObject = associatedObject_;
-@synthesize container = container_;
+COSynth(title)
+COSynth(associatedObject)
+COSynth(container)
 
 + (COToken *)tokenWithTitle:(NSString *)title associatedObject:(id)obj container:(COTokenField *)container {
   COToken *token = [self buttonWithType:UIButtonTypeCustom];
@@ -843,10 +845,10 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 #pragma mark - COEmailTableCell
 
 @implementation COEmailTableCell
-@synthesize nameLabel = nameLabel_;
-@synthesize emailLabelLabel = emailLabelLabel_;
-@synthesize emailAddressLabel = emailAddressLabel_;
-@synthesize associatedRecord = associatedRecord_;
+COSynth(nameLabel)
+COSynth(emailLabelLabel)
+COSynth(emailAddressLabel)
+COSynth(associatedRecord)
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
