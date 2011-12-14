@@ -13,23 +13,7 @@
 
 #define COSynth(x) @synthesize x = x##_;
 
-@interface CORecord ()
-@property (nonatomic, copy, readwrite) NSString *title;
-@property (nonatomic, strong, readwrite) COPerson *person;
-@end
-
-@implementation CORecord
-COSynth(title)
-COSynth(person)
-
-- (NSString *)description {
-  return [NSString stringWithFormat:@"<%@ title: '%@'; person: '%@'>",
-          NSStringFromClass(isa), self.title, self.person];
-}
-
-@end
-
-#pragma mark - COToken
+// =============================================================================
 
 @class COTokenField;
 
@@ -42,7 +26,7 @@ COSynth(person)
 
 @end
 
-#pragma mark - COEmailTableCell
+// =============================================================================
 
 @interface COEmailTableCell : UITableViewCell
 @property (nonatomic, strong) UILabel *nameLabel;
@@ -54,7 +38,7 @@ COSynth(person)
 
 @end
 
-#pragma mark - COTokenField Interface & Delegate Protocol
+// =============================================================================
 
 @protocol COTokenFieldDelegate <NSObject>
 @required
@@ -91,27 +75,46 @@ COSynth(person)
 
 @end
 
-#pragma mark - Data Structures
+// =============================================================================
 
-@interface COPerson () {
-@package
-  ABRecordRef record_;
+@interface COPerson ()
+
+- (id)initWithABRecordRef:(ABRecordRef)record;
+
+@end
+
+@interface CORecord ()
+@property (nonatomic, copy, readwrite) NSString *title;
+@property (nonatomic, strong, readwrite) COPerson *person;
+@end
+
+@implementation CORecord
+COSynth(title)
+COSynth(person)
+
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<%@ title: '%@'; person: '%@'>",
+          NSStringFromClass(isa), self.title, self.person];
 }
+
 @end
 
 @interface CORecordEmail : NSObject {
-@package
+@private
   ABMultiValueRef         emails_;
   ABMultiValueIdentifier  identifier_;
 }
 @property (nonatomic, readonly) NSString *label;
 @property (nonatomic, readonly) NSString *address;
+
+- (id)initWithEmails:(ABMultiValueRef)emails identifier:(ABMultiValueIdentifier)identifier;
+
 @end
 
-#pragma mark - COPeoplePickerViewController
+// =============================================================================
 
 @interface COPeoplePickerViewController () <UITableViewDelegate, UITableViewDataSource, COTokenFieldDelegate, ABPeoplePickerNavigationControllerDelegate> {
-@package
+@private
   ABAddressBookRef addressBook_;
   CGRect           keyboardFrame_;
 }
@@ -260,8 +263,6 @@ COSynth(shadowLayer)
   
   CGFloat contentOffset = MAX(0, CGRectGetHeight(tokenFieldBounds) - CGRectGetHeight(self.tokenFieldScrollView.bounds));
   [self.tokenFieldScrollView setContentOffset:CGPointMake(0, contentOffset) animated:YES];
-  
-  //NSLog(@"selectedRecors: %@", self.selectedRecords);
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -318,14 +319,6 @@ static NSString *kCORecordEmailAddress = @"emailAddress";
 static NSString *kCORecordRef = @"record";
 
 - (void)tokenField:(COTokenField *)tokenField updateAddressBookSearchResults:(NSArray *)records {
-//  NSLog(@"matches:");
-//  for (CORecord *record in records) {
-//    NSLog(@"\t%@:", record.fullName);
-//    for (CORecordEmail *email in record.emailAddresses) {
-//      NSLog(@"\t\t-> %@: %@", email.label, email.address);
-//    }
-//  }
-  
   // Split the search results into one email value per row
   NSMutableArray *results = [NSMutableArray new];
 #if TARGET_IPHONE_SIMULATOR
@@ -376,8 +369,7 @@ static NSString *kCORecordRef = @"record";
   NSString *email = CFBridgingRelease(ABMultiValueCopyValueAtIndex(multi, identifier));
   CFRelease(multi);
   
-  COPerson *record = [COPerson new];
-  record->record_ = CFRetain(person);
+  COPerson *record = [[COPerson alloc] initWithABRecordRef:person];
   
   [self.tokenField processToken:email associatedRecord:record];
   [self dismissModalViewControllerAnimated:YES];
@@ -423,7 +415,7 @@ static NSString *kCORecordRef = @"record";
 
 @end
 
-#pragma mark - COTokenField Implementation
+// =============================================================================
 
 @implementation COTokenField
 COSynth(tokenFieldDelegate)
@@ -612,8 +604,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
       records = [NSMutableArray new];
       for (id obj in people) {
         ABRecordRef recordRef = (__bridge CFTypeRef)obj;
-        COPerson *record = [COPerson new];
-        record->record_ = CFRetain(recordRef);
+        COPerson *record = [[COPerson alloc] initWithABRecordRef:recordRef];
         [records addObject:record];
       }
       lastUpdated = [NSDate date];
@@ -667,7 +658,7 @@ static BOOL containsString(NSString *haystack, NSString *needle) {
 
 @end
 
-#pragma mark - COToken
+// =============================================================================
 
 @implementation COToken
 COSynth(title)
@@ -762,9 +753,22 @@ COSynth(container)
 
 @end
 
-#pragma mark - COPerson
+// =============================================================================
 
-@implementation COPerson
+@implementation COPerson {
+@private
+  ABRecordRef record_;
+}
+
+- (id)initWithABRecordRef:(ABRecordRef)record {
+  self = [super init];
+  if (self) {
+    if (record != NULL) {
+      record_ = CFRetain(record);
+    }
+  }
+  return self;
+}
 
 - (void)dealloc {
   if (record_) {
@@ -799,15 +803,14 @@ COSynth(container)
 
 - (NSArray *)emailAddresses {
   NSMutableArray *addresses = [NSMutableArray new];
-  ABMultiValueRef multi = ABRecordCopyValue(record_, kABPersonEmailProperty);
-  CFIndex multiCount = ABMultiValueGetCount(multi);
+  ABMultiValueRef emails = ABRecordCopyValue(record_, kABPersonEmailProperty);
+  CFIndex multiCount = ABMultiValueGetCount(emails);
   for (CFIndex i=0; i<multiCount; i++) {
-    CORecordEmail *email = [CORecordEmail new];
-    email->emails_ = CFRetain(multi);
-    email->identifier_ = ABMultiValueGetIdentifierAtIndex(multi, i);
+    CORecordEmail *email = [[CORecordEmail alloc] initWithEmails:emails
+                                                      identifier:ABMultiValueGetIdentifierAtIndex(emails, i)];
     [addresses addObject:email];
   }
-  CFRelease(multi);
+  CFRelease(emails);
   return [NSArray arrayWithArray:addresses];
 }
 
@@ -817,7 +820,20 @@ COSynth(container)
 
 @end
 
+// =============================================================================
+
 @implementation CORecordEmail
+
+- (id)initWithEmails:(ABMultiValueRef)emails identifier:(ABMultiValueIdentifier)identifier {
+  self = [super init];
+  if (self) {
+    if (emails != NULL) {
+      emails_ = CFRetain(emails);
+    }
+    identifier_ = identifier;
+  }
+  return self;
+}
 
 - (void)dealloc {
   if (emails_ != NULL) {
@@ -842,7 +858,7 @@ COSynth(container)
 
 @end
 
-#pragma mark - COEmailTableCell
+// =============================================================================
 
 @implementation COEmailTableCell
 COSynth(nameLabel)
