@@ -68,6 +68,8 @@
 
 - (CGFloat)heightForNumberOfRows:(NSUInteger)rows;
 - (void)selectToken:(COToken *)token;
+- (void)removeAllTokens;
+- (void)removeToken:(COToken *)token;
 - (void)modifyToken:(COToken *)token;
 - (void)modifySelectedToken;
 - (void)processToken:(NSString *)tokenText associatedRecord:(COPerson *)record;
@@ -77,12 +79,6 @@
 
 // =============================================================================
 
-@interface COPerson ()
-
-- (id)initWithABRecordRef:(ABRecordRef)record;
-
-@end
-
 @interface CORecord ()
 @property (nonatomic, copy, readwrite) NSString *title;
 @property (nonatomic, strong, readwrite) COPerson *person;
@@ -91,6 +87,15 @@
 @implementation CORecord
 COSynth(title)
 COSynth(person)
+
+- (id)initWithTitle:(NSString *)title person:(COPerson *)person {
+  self = [super init];
+  if (self) {
+    self.title = title;
+    self.person = person;
+  }
+  return self;
+}
 
 - (NSString *)description {
   return [NSString stringWithFormat:@"<%@ title: '%@'; person: '%@'>",
@@ -285,6 +290,13 @@ COSynth(shadowLayer)
     [map addObject:record];
   }
   return [NSArray arrayWithArray:map];
+}
+
+- (void)resetTokenFieldWithRecords:(NSArray *)records {
+  [self.tokenField removeAllTokens];
+  for (CORecord *record in records) {
+    [self.tokenField processToken:record.title associatedRecord:record.person];
+  }
 }
 
 - (void)keyboardDidShow:(NSNotification *)note {
@@ -544,13 +556,28 @@ static NSString *kCOTokenFieldDetectorString = @"\u200B";
   }
 }
 
+- (void)removeAllTokens {
+  for (COToken *token in self.tokens) {
+    [token removeFromSuperview];
+  }
+  [self.tokens removeAllObjects];
+  self.textField.hidden = NO;
+  self.selectedToken = nil;
+  [self setNeedsLayout];
+}
+
+- (void)removeToken:(COToken *)token {
+  [token removeFromSuperview];
+  [self.tokens removeObject:token];
+  self.textField.hidden = NO;
+  self.selectedToken = nil;
+  [self setNeedsLayout];
+}
+
 - (void)modifyToken:(COToken *)token {
   if (token != nil) {
     if (token == self.selectedToken) {
-      [token removeFromSuperview];
-      [self.tokens removeObject:token];
-      self.textField.hidden = NO;
-      self.selectedToken = nil;
+      [self removeToken:token];
     }
     else {
       [self selectToken:token];

@@ -30,6 +30,12 @@
  */
 @property (nonatomic, readonly) NSArray *selectedRecords;
 
+/*!
+ @method resetTokenFieldWithRecords:
+ @abstract Resets the token field if controller was initialized previously.
+ */
+- (void)resetTokenFieldWithRecords:(NSArray *)records;
+
 @end
 
 @interface COPerson : NSObject
@@ -41,11 +47,17 @@
 @property (nonatomic, readonly) NSString *nameSuffix;
 @property (nonatomic, readonly) NSArray *emailAddresses;
 @property (nonatomic, readonly) ABRecordRef record;
+
+- (id)initWithABRecordRef:(ABRecordRef)record;
+
 @end
 
 @interface CORecord : NSObject
 @property (nonatomic, copy, readonly) NSString *title;
 @property (nonatomic, strong, readonly) COPerson *person;
+
+- (id)initWithTitle:(NSString *)title person:(COPerson *)person;
+
 @end
 
 @protocol COPeoplePickerViewControllerDelegate <NSObject>
