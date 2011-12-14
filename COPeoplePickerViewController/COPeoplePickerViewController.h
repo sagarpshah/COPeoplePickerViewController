@@ -26,7 +26,7 @@
 
 /*!
  @property selectedRecords
- @abstract Returns an array of COPersonRecords.
+ @abstract Returns an array of CORecord.
  */
 @property (nonatomic, readonly) NSArray *selectedRecords;
 
