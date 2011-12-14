@@ -312,7 +312,7 @@ COSynth(shadowLayer)
 
 - (void)tokenFieldDidPressAddContactButton:(COTokenField *)tokenField {
   ABPeoplePickerNavigationController *picker = [ABPeoplePickerNavigationController new];
-  picker.addressBook = addressBook_;
+  picker.addressBook = self.addressBookRef;
   picker.peoplePickerDelegate = self;
   picker.displayedProperties = self.displayedProperties;
   
@@ -326,7 +326,7 @@ COSynth(shadowLayer)
 }
 
 - (ABAddressBookRef)addressBookForTokenField:(COTokenField *)tokenField {
-  return addressBook_;
+  return self.addressBookRef;
 }
 
 static NSString *kCORecordFullName = @"fullName";
